@@ -1,0 +1,218 @@
+{
+    "$schema": "https://raw.githubusercontent.com/datagems-eosc/moma-management/refs/tags/v2.3.0/moma_management/domain/schema/moma.schema.json",
+    "nodes": [
+        {
+            "id": "b1000000-0000-4000-a000-000000000001",
+            "labels": [
+                "Analytical_Pattern"
+            ],
+            "properties": {
+                "name": "NL Query Execution AP",
+                "description": "Takes a natural-language query, translates it to SQL, and executes it against a dataset.",
+                "process": "query",
+                "publishedDate": "2026-04-30"
+            }
+        },
+        {
+            "id": "b1000000-0000-4000-a000-000000000002",
+            "labels": [
+                "Text_To_SQL_Operator",
+                "Operator"
+            ],
+            "properties": {
+                "name": "Text to SQL",
+                "description": "Translates a natural-language string into a safe SQL query.",
+                "version": "1.0.0",
+                "step": 1,
+                "inputs": [
+                    {
+                        "name": "nl",
+                        "type": "string",
+                        "required": true,
+                        "default": ""
+                    }
+                ],
+                "outputs": [
+                    {
+                        "name": "query",
+                        "type": "string",
+                        "required": true,
+                        "default": ""
+                    },
+                    {
+                        "name": "is_read_only",
+                        "type": "boolean",
+                        "required": true,
+                        "default": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "b1000000-0000-4000-a000-000000000003",
+            "labels": [
+                "SQL_Query_Operator",
+                "Operator"
+            ],
+            "properties": {
+                "name": "SQL Execution",
+                "description": "Executes an SQL query against the input dataset and returns the result rows.",
+                "version": "1.0.0",
+                "step": 2,
+                "inputs": [
+                    {
+                        "name": "sql",
+                        "type": "string",
+                        "required": true,
+                        "default": ""
+                    },
+                    {
+                        "name": "is_safe",
+                        "type": "boolean",
+                        "required": true,
+                        "default": true
+                    }
+                ],
+                "outputs": [
+                    {
+                        "name": "result",
+                        "type": "array",
+                        "required": true,
+                        "default": []
+                    }
+                ]
+            }
+        },
+        {
+            "id": "b1000000-0000-4000-a000-000000000004",
+            "labels": [
+                "JSON",
+                "Data",
+                "cr:FileObject"
+            ],
+            "properties": {
+                "name": "DS_1",
+                "description": "Input dataset — JSON file containing the NL query and flag.",
+                "contentUrl": ""
+            }
+        },
+        {
+            "id": "b1000000-0000-4000-a000-000000000005",
+            "labels": [
+                "ResultType",
+                "string"
+            ],
+            "properties": {
+                "name": "sql_query"
+            }
+        },
+        {
+            "id": "b1000000-0000-4000-a000-000000000006",
+            "labels": [
+                "ResultType",
+                "boolean"
+            ],
+            "properties": {
+                "name": "is_safe"
+            }
+        },
+        {
+            "id": "b1000000-0000-4000-a000-000000000007",
+            "labels": [
+                "JSON",
+                "Data",
+                "cr:FileObject"
+            ],
+            "properties": {
+                "name": "DS_3",
+                "description": "Output dataset — JSON file containing the query result rows.",
+                "contentUrl": ""
+            }
+        }
+    ],
+    "edges": [
+        {
+            "from": "b1000000-0000-4000-a000-000000000001",
+            "to": "b1000000-0000-4000-a000-000000000002",
+            "labels": [
+                "consist_of"
+            ]
+        },
+        {
+            "from": "b1000000-0000-4000-a000-000000000001",
+            "to": "b1000000-0000-4000-a000-000000000003",
+            "labels": [
+                "consist_of"
+            ]
+        },
+        {
+            "from": "b1000000-0000-4000-a000-000000000002",
+            "to": "b1000000-0000-4000-a000-000000000003",
+            "labels": [
+                "follows"
+            ]
+        },
+        {
+            "from": "b1000000-0000-4000-a000-000000000002",
+            "to": "b1000000-0000-4000-a000-000000000004",
+            "labels": [
+                "input"
+            ]
+        },
+        {
+            "from": "b1000000-0000-4000-a000-000000000002",
+            "to": "b1000000-0000-4000-a000-000000000005",
+            "labels": [
+                "output"
+            ],
+            "properties": {
+                "mapping": {
+                    "to['sql_query']": "from['outputs']['query']"
+                }
+            }
+        },
+        {
+            "from": "b1000000-0000-4000-a000-000000000002",
+            "to": "b1000000-0000-4000-a000-000000000006",
+            "labels": [
+                "output"
+            ],
+            "properties": {
+                "mapping": {
+                    "to['is_safe']": "from['outputs']['is_read_only']"
+                }
+            }
+        },
+        {
+            "from": "b1000000-0000-4000-a000-000000000003",
+            "to": "b1000000-0000-4000-a000-000000000005",
+            "labels": [
+                "input"
+            ],
+            "properties": {
+                "mapping": {
+                    "from['inputs']['sql']": "to['sql_query']"
+                }
+            }
+        },
+        {
+            "from": "b1000000-0000-4000-a000-000000000003",
+            "to": "b1000000-0000-4000-a000-000000000006",
+            "labels": [
+                "input"
+            ],
+            "properties": {
+                "mapping": {
+                    "from['inputs']['is_safe']": "to['is_safe']"
+                }
+            }
+        },
+        {
+            "from": "b1000000-0000-4000-a000-000000000003",
+            "to": "b1000000-0000-4000-a000-000000000007",
+            "labels": [
+                "output"
+            ]
+        }
+    ]
+}

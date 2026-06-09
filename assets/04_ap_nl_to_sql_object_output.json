@@ -1,0 +1,69 @@
+{
+    "$schema": "https://raw.githubusercontent.com/datagems-eosc/moma-management/refs/tags/v2.3.0/moma_management/domain/schema/moma.schema.json",
+    "nodes": [
+        {
+            "id": "0a79a9c7-76f3-4f96-be42-e6818793f182",
+            "labels": [
+                "Analytical_Pattern"
+            ],
+            "properties": {
+                "name": "Text to SQL object output",
+                "description": "Takes a natural-language query and translates it into SQL.",
+                "process": "query",
+                "publishedDate": "2026-04-30"
+            }
+        },
+        {
+            "id": "1de6e343-6952-4361-a17f-e4a9f1eaeae2",
+            "labels": [
+                "Text_To_SQL_Operator",
+                "Operator"
+            ],
+            "properties": {
+                "name": "Text to SQL",
+                "description": "Translates a natural-language string into a safe SQL query.",
+                "version": "1.0.0",
+                "step": 1,
+                "inputs": [
+                    {
+                        "name": "nl",
+                        "type": "string",
+                        "required": true,
+                        "default": ""
+                    }
+                ],
+                "outputs": [
+                    {
+                        "name": "payload",
+                        "type": "object",
+                        "properties": {
+                            "query": {
+                                "type": "string"
+                            },
+                            "confidence": {
+                                "type": "number"
+                            },
+                            "garbage": {
+                                "type": "string"
+                            },
+                            "similarity": {
+                                "type": "number"
+                            }
+                        },
+                        "required": true,
+                        "default": ""
+                    }
+                ]
+            }
+        }
+    ],
+    "edges": [
+        {
+            "from": "0a79a9c7-76f3-4f96-be42-e6818793f182",
+            "to": "1de6e343-6952-4361-a17f-e4a9f1eaeae2",
+            "labels": [
+                "consist_of"
+            ]
+        }
+    ]
+}

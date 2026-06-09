@@ -1,0 +1,21 @@
+[project]
+name = "frontend"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "litellm>=1.82.0",
+    "requests>=2.32.5",
+    "streamlit>=1.54.0",
+]
+
+[dependency-groups]
+dev = [
+    "microsoft-kiota-abstractions>=1.9.9",
+    "microsoft-kiota-http>=1.9.9",
+    "microsoft-kiota-serialization-form>=1.9.9",
+    "microsoft-kiota-serialization-json>=1.9.9",
+    "microsoft-kiota-serialization-multipart>=1.9.9",
+    "microsoft-kiota-serialization-text>=1.9.9",
+]

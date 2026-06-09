@@ -1,0 +1,55 @@
+{
+    "$schema": "https://raw.githubusercontent.com/datagems-eosc/moma-management/refs/tags/v2.3.0/moma_management/domain/schema/moma.schema.json",
+    "nodes": [
+        {
+            "id": "0c2052db-1274-4fd8-b428-1538ce7bfe6f",
+            "labels": [
+                "Analytical_Pattern"
+            ],
+            "properties": {
+                "name": "Explain AP",
+                "description": "Takes an SQL query and returns provenance and execution explanation information.",
+                "process": "explain",
+                "publishedDate": "2026-04-30"
+            }
+        },
+        {
+            "id": "68281dc0-9bb6-4caa-8bf8-b7d0054f1729",
+            "labels": [
+                "SQL_Provenance_Operator",
+                "Operator"
+            ],
+            "properties": {
+                "name": "SQL Provenance",
+                "description": "Analyzes an SQL query and returns provenance information describing the data sources, transformations, and execution plan.",
+                "version": "1.0.0",
+                "step": 1,
+                "inputs": [
+                    {
+                        "name": "sql",
+                        "type": "string",
+                        "required": true,
+                        "default": ""
+                    }
+                ],
+                "outputs": [
+                    {
+                        "name": "provenance",
+                        "type": "string",
+                        "required": true,
+                        "default": ""
+                    }
+                ]
+            }
+        }
+    ],
+    "edges": [
+        {
+            "from": "0c2052db-1274-4fd8-b428-1538ce7bfe6f",
+            "to": "68281dc0-9bb6-4caa-8bf8-b7d0054f1729",
+            "labels": [
+                "consist_of"
+            ]
+        }
+    ]
+}
