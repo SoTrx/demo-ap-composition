@@ -1,5 +1,6 @@
 services:
   app:
+    build: null
     image: mcr.microsoft.com/devcontainers/python:3.14-trixie
     volumes:
       - ..:/workspaces:cached

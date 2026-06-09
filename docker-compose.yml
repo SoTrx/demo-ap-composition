@@ -1,4 +1,21 @@
 services:
+
+  app:
+    build: .
+    ports:
+      - "8501:8501"
+    environment:
+      - AP_MANAGEMENT_SERVICE_URL=http://ap-management:5000
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8501 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    depends_on:
+      ap-management:
+        condition: service_healthy
   neo4j:
     image: neo4j:5.26
     environment:
@@ -27,11 +44,11 @@ services:
         condition: service_healthy
 
   ap-management:
-    image: ghcr.io/datagems-eosc/datagems-eosc/ap-management:v1.0.2
+    image: ghcr.io/datagems-eosc/datagems-eosc/ap-management:v1.0.3
     environment:
       - MOMA_MANAGEMENT_URL=http://moma-management:5000
-      - LLM_API_BASE=https://datagems-dev.scayle.es/momapxy/v1
-      - LLM_API_KEY=master-key
+      - LLM_API_BASE=${LLM_API_BASE}
+      - LLM_API_KEY=${LLM_API_KEY}
       - LLM_API_MODEL=openai/scayle_qwen
       - LLM_SSL_VERIFY=false
     depends_on:
