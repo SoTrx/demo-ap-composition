@@ -5,8 +5,9 @@ services:
     labels:
     - traefik.enable=true
     - traefik.http.routers.demo-composition.rule=PathPrefix(`/demo-composition`)
-    - traefik.http.routers.demo-composition.entrypoints=web
     - traefik.http.services.demo-composition.loadbalancer.server.port=8501
+    - traefik.http.routers.demo-composition.entrypoints=web,websecure
+    - traefik.http.routers.demo-composition.tls.certresolver=le
     ports:
       - "8501:8501"
     environment:
