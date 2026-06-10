@@ -10,3 +10,5 @@ wheels/
 .venv
 vpn
 .env
+# Slop
+.claude
