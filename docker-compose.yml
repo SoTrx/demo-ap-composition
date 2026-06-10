@@ -51,6 +51,12 @@ services:
       - LLM_API_KEY=${LLM_API_KEY}
       - LLM_API_MODEL=openai/scayle_qwen
       - LLM_SSL_VERIFY=false
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:5000')\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
     depends_on:
       moma-management:
         condition: service_healthy
