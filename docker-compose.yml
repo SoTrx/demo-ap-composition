@@ -2,6 +2,12 @@ services:
 
   app:
     image: ghcr.io/sotrx/sotrx/demo-ap-composition:v0.1.0
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.demo-composition.rule=PathPrefix(`/demo-composition`)
+      - traefik.http.middlewares.demo-composition-strip.stripprefix.prefixes=/demo-composition
+      - traefik.http.routers.demo-composition.middlewares=demo-composition-strip
+      - traefik.http.services.demo-composition.loadbalancer.server.port=8501
     ports:
       - "8501:8501"
     environment:
