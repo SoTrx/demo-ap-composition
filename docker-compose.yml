@@ -4,10 +4,9 @@ services:
     image: ghcr.io/sotrx/sotrx/demo-ap-composition:v0.1.0
     labels:
     - traefik.enable=true
-    - traefik.http.routers.demo-composition.rule=Host(`${APP_HOST}`) && PathPrefix(`/demo-composition`)    
+    - traefik.http.routers.demo-composition.rule=PathPrefix(`/demo-composition`)
     - traefik.http.services.demo-composition.loadbalancer.server.port=8501
-    - traefik.http.routers.demo-composition.entrypoints=web,websecure
-    - traefik.http.routers.demo-composition.tls.certresolver=le
+    - traefik.http.routers.demo-composition.entrypoints=web
     ports:
       - "8501:8501"
     environment:
