@@ -1,4 +1,5 @@
 import asyncio
+from pathlib import Path
 
 import streamlit as st
 from kiota_abstractions.api_error import APIError
@@ -24,6 +25,7 @@ for name, path, category in ap_files:
     _grouped.setdefault(category, []).append((name, path))
 
 path_by_name = {name: path for name, path, _ in ap_files}
+_prefix_to_name = {Path(path).stem[:2]: name for name, path, _ in ap_files}
 
 _PLACEHOLDER = "Select an AP…"
 _grouped_options: list[str] = [_PLACEHOLDER]
@@ -41,6 +43,42 @@ def _format_option(opt: str) -> str:
     if opt == _PLACEHOLDER:
         return opt
     return f"  {opt}"
+
+
+_PRESET_PLACEHOLDER = "— Select a preset —"
+_PRESETS: list[tuple[str, str | None, str | None]] = [
+    (_PRESET_PLACEHOLDER, None, None),
+    ("One input to one output", "01", "02"),
+    ("Multiple outputs to one input", "03", "02"),
+    ("Object output to string input", "04", "02"),
+    ("Ambiguous array to string", "05", "02"),
+    ("Cross operator sourcing", "06", "07"),
+]
+_PRESET_LABELS = [label for label, _, _ in _PRESETS]
+_PRESET_MAP = {label: (p1, p2) for label, p1, p2 in _PRESETS if p1 and p2}
+
+
+def _apply_preset() -> None:
+    label = st.session_state.get("preset")
+    pair = _PRESET_MAP.get(label)
+    if not pair:
+        return
+    p1, p2 = pair
+    name1 = _prefix_to_name.get(p1)
+    name2 = _prefix_to_name.get(p2)
+    if name1 and name1 in _grouped_options:
+        st.session_state["ap1"] = name1
+    if name2 and name2 in _grouped_options:
+        st.session_state["ap2"] = name2
+
+
+st.selectbox(
+    "Preset",
+    _PRESET_LABELS,
+    key="preset",
+    on_change=_apply_preset,
+    help="Pre-select a pair of Analytical Patterns to compose.",
+)
 
 st.divider()
 
