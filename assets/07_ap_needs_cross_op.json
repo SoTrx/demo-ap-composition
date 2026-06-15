@@ -1,0 +1,61 @@
+{
+    "$schema": "https://raw.githubusercontent.com/datagems-eosc/moma-management/refs/tags/v2.3.0/moma_management/domain/schema/moma.schema.json",
+    "nodes": [
+        {
+            "id": "a7a70000-0000-4000-8000-000000000001",
+            "labels": [
+                "Analytical_Pattern"
+            ],
+            "properties": {
+                "name": "SQL With Context AP",
+                "description": "Takes an SQL query and a database schema summary and returns a human-readable explanation.",
+                "process": "explain",
+                "publishedDate": "2026-06-15"
+            }
+        },
+        {
+            "id": "a7a70000-0000-4000-8000-000000000002",
+            "labels": [
+                "SQL_With_Context_Operator",
+                "Operator"
+            ],
+            "properties": {
+                "name": "SQL With Context",
+                "description": "Produces a plain-language explanation of an SQL query given the target schema.",
+                "version": "1.0.0",
+                "step": 1,
+                "inputs": [
+                    {
+                        "name": "query",
+                        "type": "string",
+                        "required": true,
+                        "default": ""
+                    },
+                    {
+                        "name": "schema",
+                        "type": "string",
+                        "required": true,
+                        "default": ""
+                    }
+                ],
+                "outputs": [
+                    {
+                        "name": "explanation",
+                        "type": "string",
+                        "required": true,
+                        "default": ""
+                    }
+                ]
+            }
+        }
+    ],
+    "edges": [
+        {
+            "from": "a7a70000-0000-4000-8000-000000000001",
+            "to": "a7a70000-0000-4000-8000-000000000002",
+            "labels": [
+                "consist_of"
+            ]
+        }
+    ]
+}

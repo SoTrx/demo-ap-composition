@@ -7,7 +7,7 @@
                 "Analytical_Pattern"
             ],
             "properties": {
-                "name": "Text to SQL object output",
+                "name": "Text to SQL Object Output",
                 "description": "Takes a natural-language query and translates it into SQL.",
                 "process": "query",
                 "publishedDate": "2026-04-30"

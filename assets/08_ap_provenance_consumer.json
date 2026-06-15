@@ -2,31 +2,31 @@
     "$schema": "https://raw.githubusercontent.com/datagems-eosc/moma-management/refs/tags/v2.3.0/moma_management/domain/schema/moma.schema.json",
     "nodes": [
         {
-            "id": "0a79a9c7-76f3-4f96-be42-e6818793f182",
+            "id": "a8a80000-0000-4000-8000-000000000001",
             "labels": [
                 "Analytical_Pattern"
             ],
             "properties": {
-                "name": "Text to SQL Array Output",
-                "description": "Takes a natural-language query and translates it into SQL.",
-                "process": "query",
-                "publishedDate": "2026-04-30"
+                "name": "Provenance Report AP",
+                "description": "Takes provenance information and produces a structured report.",
+                "process": "report",
+                "publishedDate": "2026-06-15"
             }
         },
         {
-            "id": "1de6e343-6952-4361-a17f-e4a9f1eaeae2",
+            "id": "a8a80000-0000-4000-8000-000000000002",
             "labels": [
-                "Text_To_SQL_Operator",
+                "Provenance_Report_Operator",
                 "Operator"
             ],
             "properties": {
-                "name": "Text to SQL",
-                "description": "Translates a natural-language string into a safe SQL query.",
+                "name": "Provenance Report",
+                "description": "Formats raw provenance text into a structured report.",
                 "version": "1.0.0",
                 "step": 1,
                 "inputs": [
                     {
-                        "name": "nl",
+                        "name": "provenance",
                         "type": "string",
                         "required": true,
                         "default": ""
@@ -34,11 +34,8 @@
                 ],
                 "outputs": [
                     {
-                        "name": "query",
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
+                        "name": "report",
+                        "type": "string",
                         "required": true,
                         "default": ""
                     }
@@ -48,8 +45,8 @@
     ],
     "edges": [
         {
-            "from": "0a79a9c7-76f3-4f96-be42-e6818793f182",
-            "to": "1de6e343-6952-4361-a17f-e4a9f1eaeae2",
+            "from": "a8a80000-0000-4000-8000-000000000001",
+            "to": "a8a80000-0000-4000-8000-000000000002",
             "labels": [
                 "consist_of"
             ]
