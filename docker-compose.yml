@@ -62,7 +62,7 @@ services:
       - internal
 
   ap-management:
-    image: ghcr.io/datagems-eosc/datagems-eosc/ap-management:v1.0.3
+    image: ghcr.io/datagems-eosc/datagems-eosc/ap-management:v1.2.1
     labels:
       - traefik.enable=false
     environment:
