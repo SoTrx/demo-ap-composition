@@ -1,7 +1,7 @@
 services:
 
   app:
-    image: ghcr.io/sotrx/sotrx/demo-ap-composition:v0.1.1
+    image: ghcr.io/sotrx/sotrx/demo-ap-composition:v0.2.0
     labels:
     - traefik.enable=true
     - traefik.http.routers.demo-composition.rule=PathPrefix(`/demo-composition`)
