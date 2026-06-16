@@ -46,24 +46,24 @@ def _format_option(opt: str) -> str:
 
 
 _PRESET_PLACEHOLDER = "— Select a preset —"
-_PRESETS: list[tuple[str, str | None, str | None]] = [
-    (_PRESET_PLACEHOLDER, None, None),
-    ("One input to one output", "01", "02"),
-    ("Multiple outputs to one input", "03", "02"),
-    ("Object output to string input", "04", "02"),
-    ("Ambiguous array to string", "05", "02"),
-    ("Cross operator sourcing", "06", "07"),
+_PRESETS: list[tuple[str, str | None, str | None, str]] = [
+    (_PRESET_PLACEHOLDER, None, None, ""),
+    ("One input to one output", "01", "02", "The simplest composition: AP1 produces a single output that feeds directly into AP2's single input."),
+    ("Multiple outputs to one input", "03", "02", "AP1 exposes several outputs; the composer selects the right one to wire into AP2's input."),
+    ("Object output to string input", "04", "02", "AP1 returns a structured object, requiring the composer to extract the correct field and convert it to the string expected by AP2."),
+    ("Ambiguous array to string", "05", "02", "AP1 outputs an array of strings, forcing the composer to resolve the ambiguity before passing a single value to AP2."),
+    ("Cross operator sourcing", "06", "07", "AP1 chains two operators internally; AP2 relies on a cross-operator source, exercising more complex dependency resolution."),
 ]
-_PRESET_LABELS = [label for label, _, _ in _PRESETS]
-_PRESET_MAP = {label: (p1, p2) for label, p1, p2 in _PRESETS if p1 and p2}
+_PRESET_LABELS = [label for label, _, _, _ in _PRESETS]
+_PRESET_MAP = {label: (p1, p2, desc) for label, p1, p2, desc in _PRESETS if p1 and p2}
 
 
 def _apply_preset() -> None:
     label = st.session_state.get("preset")
-    pair = _PRESET_MAP.get(label)
-    if not pair:
+    entry = _PRESET_MAP.get(label)
+    if not entry:
         return
-    p1, p2 = pair
+    p1, p2, _ = entry
     name1 = _prefix_to_name.get(p1)
     name2 = _prefix_to_name.get(p2)
     if name1 and name1 in _grouped_options:
@@ -79,6 +79,11 @@ st.selectbox(
     on_change=_apply_preset,
     help="Pre-select a pair of Analytical Patterns to compose.",
 )
+
+_active_preset = st.session_state.get("preset", _PRESET_PLACEHOLDER)
+_active_entry = _PRESET_MAP.get(_active_preset)
+if _active_entry:
+    st.caption(_active_entry[2])
 
 st.divider()
 
