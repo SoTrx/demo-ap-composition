@@ -1,0 +1,26 @@
+from enum import Enum
+
+class DatasetProperty(str, Enum):
+    Id = "id",
+    Type = "type",
+    Name = "name",
+    Description = "description",
+    DatePublished = "datePublished",
+    Version = "version",
+    License = "license",
+    Url = "url",
+    InLanguage = "inLanguage",
+    Country = "country",
+    CiteAs = "citeAs",
+    ConformsTo = "conformsTo",
+    Headline = "headline",
+    Keywords = "keywords",
+    FieldOfScience = "fieldOfScience",
+    Status = "status",
+    Access = "access",
+    Doi = "doi",
+    UploadedBy = "uploadedBy",
+    ArchivedAt = "archivedAt",
+    Distribution = "distribution",
+    RecordSet = "recordSet",
+

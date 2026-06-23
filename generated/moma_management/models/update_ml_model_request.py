@@ -5,41 +5,44 @@ from kiota_abstractions.serialization import AdditionalDataHolder, Parsable, Par
 from typing import Any, Optional, TYPE_CHECKING, Union
 
 if TYPE_CHECKING:
-    from .analytical_pattern import AnalyticalPattern
+    from .update_ml_model_request_name import UpdateMlModelRequest_name
+    from .update_ml_model_request_type import UpdateMlModelRequest_type
 
 @dataclass
-class ComposePayload(AdditionalDataHolder, Parsable):
+class UpdateMlModelRequest(AdditionalDataHolder, Parsable):
     # Stores additional data not described in the OpenAPI description found when deserializing. Can be used for serialization as well.
     additional_data: dict[str, Any] = field(default_factory=dict)
 
-    # The ap1 property
-    ap1: Optional[AnalyticalPattern] = None
-    # The ap2 property
-    ap2: Optional[AnalyticalPattern] = None
+    # The name property
+    name: Optional[UpdateMlModelRequest_name] = None
+    # The type property
+    type: Optional[UpdateMlModelRequest_type] = None
     
     @staticmethod
-    def create_from_discriminator_value(parse_node: ParseNode) -> ComposePayload:
+    def create_from_discriminator_value(parse_node: ParseNode) -> UpdateMlModelRequest:
         """
         Creates a new instance of the appropriate class based on discriminator value
         param parse_node: The parse node to use to read the discriminator value and create the object
-        Returns: ComposePayload
+        Returns: UpdateMlModelRequest
         """
         if parse_node is None:
             raise TypeError("parse_node cannot be null.")
-        return ComposePayload()
+        return UpdateMlModelRequest()
     
     def get_field_deserializers(self,) -> dict[str, Callable[[ParseNode], None]]:
         """
         The deserialization information for the current model
         Returns: dict[str, Callable[[ParseNode], None]]
         """
-        from .analytical_pattern import AnalyticalPattern
+        from .update_ml_model_request_name import UpdateMlModelRequest_name
+        from .update_ml_model_request_type import UpdateMlModelRequest_type
 
-        from .analytical_pattern import AnalyticalPattern
+        from .update_ml_model_request_name import UpdateMlModelRequest_name
+        from .update_ml_model_request_type import UpdateMlModelRequest_type
 
         fields: dict[str, Callable[[Any], None]] = {
-            "ap1": lambda n : setattr(self, 'ap1', n.get_object_value(AnalyticalPattern)),
-            "ap2": lambda n : setattr(self, 'ap2', n.get_object_value(AnalyticalPattern)),
+            "name": lambda n : setattr(self, 'name', n.get_object_value(UpdateMlModelRequest_name)),
+            "type": lambda n : setattr(self, 'type', n.get_object_value(UpdateMlModelRequest_type)),
         }
         return fields
     
@@ -51,8 +54,8 @@ class ComposePayload(AdditionalDataHolder, Parsable):
         """
         if writer is None:
             raise TypeError("writer cannot be null.")
-        writer.write_object_value("ap1", self.ap1)
-        writer.write_object_value("ap2", self.ap2)
+        writer.write_object_value("name", self.name)
+        writer.write_object_value("type", self.type)
         writer.write_additional_data_value(self.additional_data)
     
 

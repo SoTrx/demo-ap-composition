@@ -14,53 +14,43 @@ from typing import Any, Optional, TYPE_CHECKING, Union
 from warnings import warn
 
 if TYPE_CHECKING:
-    from ...models.compose_payload import ComposePayload
-    from ...models.error_response import ErrorResponse
-    from ...models.h_t_t_p_validation_error import HTTPValidationError
-    from .compose_post_response import ComposePostResponse
+    from .....models.dataset_output import DatasetOutput
+    from .convert_post_request_body import ConvertPostRequestBody
 
-class ComposeRequestBuilder(BaseRequestBuilder):
+class ConvertRequestBuilder(BaseRequestBuilder):
     """
-    Builds and executes requests for operations under /analytical-patterns/compose
+    Builds and executes requests for operations under /api/v1/datasets/convert
     """
     def __init__(self,request_adapter: RequestAdapter, path_parameters: Union[str, dict[str, Any]]) -> None:
         """
-        Instantiates a new ComposeRequestBuilder and sets the default values.
+        Instantiates a new ConvertRequestBuilder and sets the default values.
         param path_parameters: The raw url or the url-template parameters for the request.
         param request_adapter: The request adapter to use to execute the requests.
         Returns: None
         """
-        super().__init__(request_adapter, "{+baseurl}/analytical-patterns/compose", path_parameters)
+        super().__init__(request_adapter, "{+baseurl}/api/v1/datasets/convert", path_parameters)
     
-    async def post(self,body: ComposePayload, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> Optional[ComposePostResponse]:
+    async def post(self,body: ConvertPostRequestBody, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> Optional[DatasetOutput]:
         """
-        Create a new AnalyticalPattern in the MoMa graph repository.The ``input`` edges of the AP **must** reference Data nodes that belongto an existing dataset, and the caller must be able to **browse** thosedatasets.  The AP cannot create Dataset nodes itself.
+        Convert a Croissant-format profile to a PG-JSON MoMa graph without persisting it.Accepts a Croissant-format JSON body, converts it to PG-JSON according tothe MoMa graph schema, and returns the result without storing it in Neo4j.This endpoint requires no authentication.
         param body: The request body
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
-        Returns: Optional[ComposePostResponse]
+        Returns: Optional[DatasetOutput]
         """
         if body is None:
             raise TypeError("body cannot be null.")
         request_info = self.to_post_request_information(
             body, request_configuration
         )
-        from ...models.error_response import ErrorResponse
-        from ...models.h_t_t_p_validation_error import HTTPValidationError
-
-        error_mapping: dict[str, type[ParsableFactory]] = {
-            "400": ErrorResponse,
-            "422": HTTPValidationError,
-            "500": ErrorResponse,
-        }
         if not self.request_adapter:
             raise Exception("Http core is null") 
-        from .compose_post_response import ComposePostResponse
+        from .....models.dataset_output import DatasetOutput
 
-        return await self.request_adapter.send_async(request_info, ComposePostResponse, error_mapping)
+        return await self.request_adapter.send_async(request_info, DatasetOutput, None)
     
-    def to_post_request_information(self,body: ComposePayload, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> RequestInformation:
+    def to_post_request_information(self,body: ConvertPostRequestBody, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> RequestInformation:
         """
-        Create a new AnalyticalPattern in the MoMa graph repository.The ``input`` edges of the AP **must** reference Data nodes that belongto an existing dataset, and the caller must be able to **browse** thosedatasets.  The AP cannot create Dataset nodes itself.
+        Convert a Croissant-format profile to a PG-JSON MoMa graph without persisting it.Accepts a Croissant-format JSON body, converts it to PG-JSON according tothe MoMa graph schema, and returns the result without storing it in Neo4j.This endpoint requires no authentication.
         param body: The request body
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: RequestInformation
@@ -73,18 +63,18 @@ class ComposeRequestBuilder(BaseRequestBuilder):
         request_info.set_content_from_parsable(self.request_adapter, "application/json", body)
         return request_info
     
-    def with_url(self,raw_url: str) -> ComposeRequestBuilder:
+    def with_url(self,raw_url: str) -> ConvertRequestBuilder:
         """
         Returns a request builder with the provided arbitrary URL. Using this method means any other path or query parameters are ignored.
         param raw_url: The raw URL to use for the request builder.
-        Returns: ComposeRequestBuilder
+        Returns: ConvertRequestBuilder
         """
         if raw_url is None:
             raise TypeError("raw_url cannot be null.")
-        return ComposeRequestBuilder(self.request_adapter, raw_url)
+        return ConvertRequestBuilder(self.request_adapter, raw_url)
     
     @dataclass
-    class ComposeRequestBuilderPostRequestConfiguration(RequestConfiguration[QueryParameters]):
+    class ConvertRequestBuilderPostRequestConfiguration(RequestConfiguration[QueryParameters]):
         """
         Configuration for the request such as headers, query parameters, and middleware options.
         """

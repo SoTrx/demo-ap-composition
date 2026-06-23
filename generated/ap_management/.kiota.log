@@ -1,26 +1,25 @@
 Debug: KiotaBuilder kiota version 1.32.1
-Debug: KiotaBuilder cache file /tmp/kiota/cache/generation/7B2E9BCFF60CF0E5264CD487EC5AEE2563AD6E4E30954717FE9E981D3C166062/openapi.json is out of date, downloading from http://172.23.0.1:5000/openapi.json
-Debug: KiotaBuilder cache file /tmp/kiota/cache/generation/7B2E9BCFF60CF0E5264CD487EC5AEE2563AD6E4E30954717FE9E981D3C166062/openapi.json not found, downloading from http://172.23.0.1:5000/openapi.json
+Debug: KiotaBuilder cache file /tmp/kiota/cache/generation/7FEDB584BDDAE8FF32ED84FF0F8EF097316A8097FF67625EA01FC92A4C91BB7A/openapi.json not found, downloading from http://172.24.0.1:5000/openapi.json
 Information: KiotaBuilder loaded description from remote source
-Debug: KiotaBuilder step 1 - reading the stream - took 00:00:00.1565258
+Debug: KiotaBuilder step 1 - reading the stream - took 00:00:00.1718786
 Warning: KiotaBuilder OpenAPI warning: #/ - A servers entry (v3) or host + basePath + schemes properties (v2) was not present in the OpenAPI description. The root URL will need to be set manually with the request adapter.
-Debug: KiotaBuilder step 2 - parsing the document - took 00:00:00.0643011
-Debug: KiotaBuilder step 3 - updating generation configuration from kiota extension - took 00:00:00.0000910
-Debug: KiotaBuilder step 4 - filtering API paths with patterns - took 00:00:00.0019018
+Debug: KiotaBuilder step 2 - parsing the document - took 00:00:00.0552173
+Debug: KiotaBuilder step 3 - updating generation configuration from kiota extension - took 00:00:00.0000765
+Debug: KiotaBuilder step 4 - filtering API paths with patterns - took 00:00:00.0015100
 Warning: KiotaBuilder No server url found in the OpenAPI document. The base url will need to be set when using the client.
-Debug: KiotaBuilder step 5 - checking whether the output should be updated - took 00:00:00.0168042
-Debug: KiotaBuilder step 6 - create uri space - took 00:00:00.0025868
-Debug: KiotaBuilder InitializeInheritanceIndex 00:00:00.0027718
+Debug: KiotaBuilder step 5 - checking whether the output should be updated - took 00:00:00.0156756
+Debug: KiotaBuilder step 6 - create uri space - took 00:00:00.0022879
+Debug: KiotaBuilder InitializeInheritanceIndex 00:00:00.0022208
 Debug: KiotaBuilder CreateRequestBuilderClass 00:00:00
-Debug: KiotaBuilder MapTypeDefinitions 00:00:00.0038908
+Debug: KiotaBuilder MapTypeDefinitions 00:00:00.0043207
 Debug: KiotaBuilder TrimInheritedModels 00:00:00
 Debug: KiotaBuilder CleanUpInternalState 00:00:00
-Debug: KiotaBuilder step 7 - create source model - took 00:00:00.0569794
-Debug: KiotaBuilder 26ms: Language refinement applied
-Debug: KiotaBuilder step 8 - refine by language - took 00:00:00.0288863
-Debug: KiotaBuilder step 9 - writing files - took 00:00:00.0405722
-Debug: KiotaBuilder cache file /tmp/kiota/cache/generation/7B2E9BCFF60CF0E5264CD487EC5AEE2563AD6E4E30954717FE9E981D3C166062/openapi.json is out of date, downloading from http://172.23.0.1:5000/openapi.json
-Debug: KiotaBuilder cache file /tmp/kiota/cache/generation/7B2E9BCFF60CF0E5264CD487EC5AEE2563AD6E4E30954717FE9E981D3C166062/openapi.json not found, downloading from http://172.23.0.1:5000/openapi.json
+Debug: KiotaBuilder step 7 - create source model - took 00:00:00.0497101
+Debug: KiotaBuilder 24ms: Language refinement applied
+Debug: KiotaBuilder step 8 - refine by language - took 00:00:00.0273327
+Debug: KiotaBuilder step 9 - writing files - took 00:00:00.0359475
+Debug: KiotaBuilder cache file /tmp/kiota/cache/generation/7FEDB584BDDAE8FF32ED84FF0F8EF097316A8097FF67625EA01FC92A4C91BB7A/openapi.json is out of date, downloading from http://172.24.0.1:5000/openapi.json
+Debug: KiotaBuilder cache file /tmp/kiota/cache/generation/7FEDB584BDDAE8FF32ED84FF0F8EF097316A8097FF67625EA01FC92A4C91BB7A/openapi.json not found, downloading from http://172.24.0.1:5000/openapi.json
 Information: KiotaBuilder loaded description from remote source
-Debug: KiotaBuilder step 10 - writing lock file - took 00:00:00.0215941
+Debug: KiotaBuilder step 10 - writing lock file - took 00:00:00.0152522
 Debug: KiotaBuilder Api manifest path: /workspaces/frontend/apimanifest.json

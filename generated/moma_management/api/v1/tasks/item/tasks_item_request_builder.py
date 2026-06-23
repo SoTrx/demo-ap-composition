@@ -6,28 +6,28 @@ from kiota_abstractions.request_adapter import RequestAdapter
 from typing import Any, Optional, TYPE_CHECKING, Union
 
 if TYPE_CHECKING:
-    from .compose.compose_request_builder import ComposeRequestBuilder
+    from .aps.aps_request_builder import ApsRequestBuilder
 
-class AnalyticalPatternsRequestBuilder(BaseRequestBuilder):
+class TasksItemRequestBuilder(BaseRequestBuilder):
     """
-    Builds and executes requests for operations under /analytical-patterns
+    Builds and executes requests for operations under /api/v1/tasks/{id}
     """
     def __init__(self,request_adapter: RequestAdapter, path_parameters: Union[str, dict[str, Any]]) -> None:
         """
-        Instantiates a new AnalyticalPatternsRequestBuilder and sets the default values.
+        Instantiates a new TasksItemRequestBuilder and sets the default values.
         param path_parameters: The raw url or the url-template parameters for the request.
         param request_adapter: The request adapter to use to execute the requests.
         Returns: None
         """
-        super().__init__(request_adapter, "{+baseurl}/analytical-patterns", path_parameters)
+        super().__init__(request_adapter, "{+baseurl}/api/v1/tasks/{id}", path_parameters)
     
     @property
-    def compose(self) -> ComposeRequestBuilder:
+    def aps(self) -> ApsRequestBuilder:
         """
-        The compose property
+        The aps property
         """
-        from .compose.compose_request_builder import ComposeRequestBuilder
+        from .aps.aps_request_builder import ApsRequestBuilder
 
-        return ComposeRequestBuilder(self.request_adapter, self.path_parameters)
+        return ApsRequestBuilder(self.request_adapter, self.path_parameters)
     
 

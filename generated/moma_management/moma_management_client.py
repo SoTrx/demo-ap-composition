@@ -24,13 +24,13 @@ from warnings import warn
 if TYPE_CHECKING:
     from .api.api_request_builder import ApiRequestBuilder
 
-class ApManagementClient(BaseRequestBuilder):
+class MomaManagementClient(BaseRequestBuilder):
     """
     The main entry point of the SDK, exposes the configuration and the fluent API.
     """
     def __init__(self,request_adapter: RequestAdapter) -> None:
         """
-        Instantiates a new ApManagementClient and sets the default values.
+        Instantiates a new MomaManagementClient and sets the default values.
         param request_adapter: The request adapter to use to execute the requests.
         Returns: None
         """
@@ -47,7 +47,7 @@ class ApManagementClient(BaseRequestBuilder):
     
     async def get(self,request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> Optional[bytes]:
         """
-        Index
+        Root
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: bytes
         """
@@ -60,7 +60,7 @@ class ApManagementClient(BaseRequestBuilder):
     
     def to_get_request_information(self,request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> RequestInformation:
         """
-        Index
+        Root
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: RequestInformation
         """
@@ -79,7 +79,7 @@ class ApManagementClient(BaseRequestBuilder):
         return ApiRequestBuilder(self.request_adapter, self.path_parameters)
     
     @dataclass
-    class ApManagementClientGetRequestConfiguration(RequestConfiguration[QueryParameters]):
+    class MomaManagementClientGetRequestConfiguration(RequestConfiguration[QueryParameters]):
         """
         Configuration for the request such as headers, query parameters, and middleware options.
         """
