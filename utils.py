@@ -59,7 +59,8 @@ def _format_type(param: dict) -> str:
     t = param.get("type", "?")
     if t == "object":
         fields = param.get("properties", {})
-        inner = ", ".join(f"{k}: {v.get('type', '?')}" for k, v in fields.items())
+        inner = ", ".join(
+            f"{k}: {v.get('type', '?')}" for k, v in fields.items())
         return "{" + inner + "}" if inner else "object"
     if t == "array":
         item_type = param.get("items", {}).get("type", "any")
@@ -105,13 +106,16 @@ def ap_to_graphviz(ap_data: dict) -> str:
         if "Operator" in labels:
             inputs = props.get("inputs", [])
             outputs = props.get("outputs", [])
-            in_sig = ", ".join(f"{p['name']}: {_format_type(p)}" for p in inputs)
-            out_sig = ", ".join(f"{p['name']}: {_format_type(p)}" for p in outputs)
+            in_sig = ", ".join(
+                f"{p['name']}: {_format_type(p)}" for p in inputs)
+            out_sig = ", ".join(
+                f"{p['name']}: {_format_type(p)}" for p in outputs)
             signature = f"({in_sig}) -> ({out_sig})".replace('"', '\\"')
             label = f"{label}\\n{signature}"
         elif "ResultType" in labels:
             # The type is encoded as a second label alongside ResultType
-            result_type = next((lbl for lbl in labels if lbl != "ResultType"), None)
+            result_type = next(
+                (lbl for lbl in labels if lbl != "ResultType"), None)
             if result_type:
                 label = f"{escaped_name}: {result_type}"
         lines.append(

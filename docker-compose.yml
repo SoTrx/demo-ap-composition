@@ -1,7 +1,7 @@
 services:
 
   app:
-    image: ghcr.io/sotrx/sotrx/demo-ap-composition:v0.2.1
+    image: ghcr.io/sotrx/sotrx/demo-ap-composition:v0.3.0
     labels:
     - traefik.enable=true
     - traefik.http.routers.demo-composition.rule=PathPrefix(`/demo-composition`)
@@ -41,7 +41,7 @@ services:
       - internal
 
   moma-management:
-    image: ghcr.io/datagems-eosc/datagems-eosc/moma-management:v2.7.0
+    image: ghcr.io/datagems-eosc/datagems-eosc/moma-management:v2.9.0
     labels:
       - traefik.enable=false
     environment:
@@ -62,7 +62,7 @@ services:
       - internal
 
   ap-management:
-    image: ghcr.io/datagems-eosc/datagems-eosc/ap-management:v1.2.1
+    image: ghcr.io/datagems-eosc/datagems-eosc/ap-management:v1.6.0
     labels:
       - traefik.enable=false
     environment:
