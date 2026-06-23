@@ -1,9 +1,7 @@
-import copy
-import json
 import logging
 from os import getenv
 
-from kiota_abstractions.api_error import APIError
+import httpx
 from kiota_abstractions.authentication.anonymous_authentication_provider import (
     AnonymousAuthenticationProvider,
 )
@@ -13,10 +11,6 @@ from generated.ap_management.ap_management_client import ApManagementClient
 from generated.ap_management.models.analytical_pattern import AnalyticalPattern
 from generated.ap_management.models.compose_payload import ComposePayload
 from generated.ap_management.models.plan_payload import PlanPayload
-from generated.moma_management.models.analytical_pattern_input import (
-    AnalyticalPatternInput,
-)
-from generated.moma_management.moma_management_client import MomaManagementClient
 from utils import list_ap_files, load_ap_json
 
 AP_MANAGEMENT_SERVICE_URL = getenv(
@@ -25,24 +19,6 @@ MOMA_MANAGEMENT_SERVICE_URL = getenv(
     "MOMA_MANAGEMENT_SERVICE_URL", "http://moma-management:5000")
 
 _log = logging.getLogger(__name__)
-
-
-def _neo4j_safe(data: dict) -> dict:
-    """Serialize node properties that are objects/arrays-of-objects to JSON strings.
-
-    Neo4j only accepts primitive types and arrays of primitives as property values.
-    Operator nodes carry `inputs`/`outputs` as arrays of objects, which must be
-    stringified before the graph repository writes them.
-    """
-    data = copy.deepcopy(data)
-    for node in data.get("nodes", []):
-        props = node.get("properties", {})
-        for key, value in props.items():
-            if isinstance(value, dict):
-                props[key] = json.dumps(value)
-            elif isinstance(value, list) and any(isinstance(v, (dict, list)) for v in value):
-                props[key] = json.dumps(value)
-    return data
 
 
 def _create_adapter(base_url: str) -> HttpxRequestAdapter:
@@ -93,28 +69,30 @@ async def plan_ap(task: str) -> dict:
 
 
 async def seed_aps_to_moma() -> None:
-    client = MomaManagementClient(_create_adapter(MOMA_MANAGEMENT_SERVICE_URL))
-    for _, path, _ in list_ap_files():
-        data = load_ap_json(path)
-        ap_id = next(
-            (n["id"] for n in data.get("nodes", [])
-             if "Analytical_Pattern" in n.get("labels", [])),
-            None,
-        )
-        if not ap_id:
-            continue
-        try:
-            await client.api.v1.aps.by_id(ap_id).get()
-            continue
-        except APIError as exc:
-            if exc.response_status_code != 404:
-                _log.warning("moma GET /aps/%s failed with %s",
-                             ap_id, exc.response_status_code)
+    base = MOMA_MANAGEMENT_SERVICE_URL.rstrip("/")
+    async with httpx.AsyncClient() as client:
+        for _, path, _ in list_ap_files():
+            if path.split("/")[-1][:2] not in ("01", "02", "08"):
                 continue
-        payload = AnalyticalPatternInput()
-        payload.additional_data = _neo4j_safe(data)
-        try:
-            await client.api.v1.aps.empty_path_segment.post(payload)
-            _log.info("Seeded AP %s into moma-management", ap_id)
-        except Exception:
-            _log.exception("Failed to seed AP %s into moma-management", ap_id)
+            data = load_ap_json(path)
+            ap_id = next(
+                (n["id"] for n in data.get("nodes", [])
+                 if "Analytical_Pattern" in n.get("labels", [])),
+                None,
+            )
+            if not ap_id:
+                continue
+            resp = await client.get(f"{base}/api/v1/aps/{ap_id}")
+            if resp.status_code != 404:
+                if resp.status_code != 200:
+                    _log.warning("moma GET /aps/%s returned %s",
+                                 ap_id, resp.status_code)
+                continue
+            body = {k: v for k, v in data.items() if k != "$schema"}
+            try:
+                resp = await client.post(f"{base}/api/v1/aps/", json=body)
+                resp.raise_for_status()
+                _log.info("Seeded AP %s into moma-management", ap_id)
+            except httpx.HTTPStatusError:
+                _log.exception("Failed to seed AP %s into moma-management: %s %s",
+                               ap_id, resp.status_code, resp.text)
