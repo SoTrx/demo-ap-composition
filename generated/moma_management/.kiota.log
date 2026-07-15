@@ -1,26 +1,25 @@
-Debug: KiotaBuilder kiota version 1.32.1
-Debug: KiotaBuilder cache file /tmp/kiota/cache/generation/6CBDADF3C0C98A45B827091252B419AE542E19B3F953D1232231EE66A205D6A6/openapi.json is out of date, downloading from http://moma-management:5000/openapi.json
+Debug: KiotaBuilder kiota version 1.34.1
 Debug: KiotaBuilder cache file /tmp/kiota/cache/generation/6CBDADF3C0C98A45B827091252B419AE542E19B3F953D1232231EE66A205D6A6/openapi.json not found, downloading from http://moma-management:5000/openapi.json
 Information: KiotaBuilder loaded description from remote source
-Debug: KiotaBuilder step 1 - reading the stream - took 00:00:00.0444701
+Debug: KiotaBuilder step 1 - reading the stream - took 00:00:00.0399157
 Warning: KiotaBuilder OpenAPI warning: #/ - A servers entry (v3) or host + basePath + schemes properties (v2) was not present in the OpenAPI description. The root URL will need to be set manually with the request adapter.
-Debug: KiotaBuilder step 2 - parsing the document - took 00:00:00.0651739
-Debug: KiotaBuilder step 3 - updating generation configuration from kiota extension - took 00:00:00.0000791
-Debug: KiotaBuilder step 4 - filtering API paths with patterns - took 00:00:00.0015656
+Debug: KiotaBuilder step 2 - parsing the document - took 00:00:00.0766309
+Debug: KiotaBuilder step 3 - updating generation configuration from kiota extension - took 00:00:00.0000793
+Debug: KiotaBuilder step 4 - filtering API paths with patterns - took 00:00:00.0015180
 Warning: KiotaBuilder No server url found in the OpenAPI document. The base url will need to be set when using the client.
-Debug: KiotaBuilder step 5 - checking whether the output should be updated - took 00:00:00.0195436
-Debug: KiotaBuilder step 6 - create uri space - took 00:00:00.0024719
-Debug: KiotaBuilder InitializeInheritanceIndex 00:00:00.0023951
+Debug: KiotaBuilder step 5 - checking whether the output should be updated - took 00:00:00.0320404
+Debug: KiotaBuilder step 6 - create uri space - took 00:00:00.0021000
+Debug: KiotaBuilder InitializeInheritanceIndex 00:00:00.0023424
 Debug: KiotaBuilder CreateRequestBuilderClass 00:00:00
-Debug: KiotaBuilder MapTypeDefinitions 00:00:00.0123221
+Debug: KiotaBuilder MapTypeDefinitions 00:00:00.0049384
 Debug: KiotaBuilder TrimInheritedModels 00:00:00
 Debug: KiotaBuilder CleanUpInternalState 00:00:00
-Debug: KiotaBuilder step 7 - create source model - took 00:00:00.0616198
-Debug: KiotaBuilder 46ms: Language refinement applied
-Debug: KiotaBuilder step 8 - refine by language - took 00:00:00.0496946
-Debug: KiotaBuilder step 9 - writing files - took 00:00:00.0510209
+Debug: KiotaBuilder step 7 - create source model - took 00:00:00.0654279
+Debug: KiotaBuilder 40ms: Language refinement applied
+Debug: KiotaBuilder step 8 - refine by language - took 00:00:00.0431793
+Debug: KiotaBuilder step 9 - writing files - took 00:00:00.0514833
 Debug: KiotaBuilder cache file /tmp/kiota/cache/generation/6CBDADF3C0C98A45B827091252B419AE542E19B3F953D1232231EE66A205D6A6/openapi.json is out of date, downloading from http://moma-management:5000/openapi.json
 Debug: KiotaBuilder cache file /tmp/kiota/cache/generation/6CBDADF3C0C98A45B827091252B419AE542E19B3F953D1232231EE66A205D6A6/openapi.json not found, downloading from http://moma-management:5000/openapi.json
 Information: KiotaBuilder loaded description from remote source
-Debug: KiotaBuilder step 10 - writing lock file - took 00:00:00.0130389
+Debug: KiotaBuilder step 10 - writing lock file - took 00:00:00.0189797
 Debug: KiotaBuilder Api manifest path: /workspaces/frontend/apimanifest.json

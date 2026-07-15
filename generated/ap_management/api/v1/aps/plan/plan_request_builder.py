@@ -14,9 +14,9 @@ from typing import Any, Optional, TYPE_CHECKING, Union
 from warnings import warn
 
 if TYPE_CHECKING:
-    from .....models.analytical_pattern import AnalyticalPattern
     from .....models.error_response import ErrorResponse
     from .....models.plan_payload import PlanPayload
+    from .....models.plan_result import PlanResult
 
 class PlanRequestBuilder(BaseRequestBuilder):
     """
@@ -31,12 +31,12 @@ class PlanRequestBuilder(BaseRequestBuilder):
         """
         super().__init__(request_adapter, "{+baseurl}/api/v1/aps/plan", path_parameters)
     
-    async def post(self,body: PlanPayload, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> Optional[AnalyticalPattern]:
+    async def post(self,body: PlanPayload, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> Optional[PlanResult]:
         """
         Plan Ap
         param body: The request body
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
-        Returns: Optional[AnalyticalPattern]
+        Returns: Optional[PlanResult]
         """
         if body is None:
             raise TypeError("body cannot be null.")
@@ -53,9 +53,9 @@ class PlanRequestBuilder(BaseRequestBuilder):
         }
         if not self.request_adapter:
             raise Exception("Http core is null") 
-        from .....models.analytical_pattern import AnalyticalPattern
+        from .....models.plan_result import PlanResult
 
-        return await self.request_adapter.send_async(request_info, AnalyticalPattern, error_mapping)
+        return await self.request_adapter.send_async(request_info, PlanResult, error_mapping)
     
     def to_post_request_information(self,body: PlanPayload, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> RequestInformation:
         """
