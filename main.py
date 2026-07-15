@@ -89,13 +89,13 @@ def _is_valid_ap(sel: str) -> bool:
 _PLAN_PRESET_PLACEHOLDER = "— Select a preset —"
 _PLAN_PRESETS: list[tuple[str, str, str]] = [
     (_PLAN_PRESET_PLACEHOLDER, "", ""),
-    ("NL To SQL + Explain (OK Scenario)", "Convert a query into SQL and explain it",
+    ("NL To SQL + Explain (OK Scenario)", "Convert \"Find my stuff\"  into SQL and compute the provenance of the result",
      "Selects and wires the patterns needed to translate a natural-language question into SQL and produce a human-readable explanation."),
     ("NL To SQL + Explain + Report (OK Scenario)",
-     "Translate a natural-language query to SQL, explain the query with provenance information, and produce a structured provenance report", "3 Steps workflow"),
+     "Translate \"Find my stuff\" to SQL, explain the query with provenance information, and produce a structured provenance report", "3 Steps workflow"),
     ("Impossible request (KO Scenario)", "Make a chocolate cake",
      "There are no chocolate cake info"),
-    ("Partial request (KO Scenario)", "Convert a query into SQL and then convert the SQL to JSON",
+    ("Partial request (KO Scenario)", "Convert \"Find my stuff\" into SQL and then convert the SQL to JSON",
      "The query-to-SQL pattern is available, but the SQL-to-JSON pattern is missing, so the plan cannot be completed. This is expected to FAIL"),
 ]
 _PLAN_PRESET_LABELS = [label for label, _, _ in _PLAN_PRESETS]
@@ -171,6 +171,8 @@ with tab_compose:
                     st.graphviz_chart(ap_to_graphviz(result), width='stretch')
                 else:
                     st.json(result)
+                with st.expander("Raw composer response (JSON)"):
+                    st.json(result)
             except ErrorResponse as exc:
                 st.warning(f"Composition impossible: {exc.detail}")
             except APIError as exc:
@@ -212,6 +214,22 @@ with tab_plan:
             if result.get("nodes"):
                 st.graphviz_chart(ap_to_graphviz(result), width='stretch')
             else:
+                st.json(result)
+
+            params = result.get("instantiation_parameters") or []
+            if params:
+                st.subheader("Suggested Instantiation Parameters")
+                st.table([
+                    {
+                        "Name": p.get("name"),
+                        "Type": p.get("type"),
+                        "Required": p.get("required"),
+                        "Suggested value": p.get("suggested_value"),
+                    }
+                    for p in params
+                ])
+
+            with st.expander("Raw planner response (JSON)"):
                 st.json(result)
         except ErrorResponse as exc:
             st.warning(f"Plan impossible: {exc.detail}")

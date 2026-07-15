@@ -11,6 +11,7 @@ from generated.ap_management.ap_management_client import ApManagementClient
 from generated.ap_management.models.analytical_pattern import AnalyticalPattern
 from generated.ap_management.models.compose_payload import ComposePayload
 from generated.ap_management.models.plan_payload import PlanPayload
+from generated.ap_management.models.suggested_parameter import SuggestedParameter
 from utils import list_ap_files, load_ap_json
 
 AP_MANAGEMENT_SERVICE_URL = getenv(
@@ -58,14 +59,26 @@ async def compose_aps(ap1_data: dict, ap2_data: dict) -> dict:
     return _ap_model_to_dict(response) if response else {}
 
 
+def _suggested_parameters_to_list(params: list[SuggestedParameter] | None) -> list[dict]:
+    return [
+        {"name": p.name, "type": p.type, "required": p.required, **(p.additional_data or {})}
+        for p in (params or [])
+    ]
+
+
 async def plan_ap(task: str) -> dict:
     client = ApManagementClient(_create_adapter(AP_MANAGEMENT_SERVICE_URL))
     try:
         response = await client.api.v1.aps.plan.post(PlanPayload(task=task))
     except Exception:
-        _log.exception("ap-management /compose call failed")
+        _log.exception("ap-management /plan call failed")
         raise
-    return _ap_model_to_dict(response) if response else {}
+    if not response:
+        return {}
+    result = _ap_model_to_dict(response.ap) if response.ap else {}
+    result["instantiation_parameters"] = _suggested_parameters_to_list(
+        response.instantiation_parameters)
+    return result
 
 
 async def seed_aps_to_moma() -> None:
