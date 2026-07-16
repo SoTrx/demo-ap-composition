@@ -41,7 +41,7 @@ services:
       - internal
 
   moma-management:
-    image: ghcr.io/datagems-eosc/datagems-eosc/moma-management:v2.9.1
+    image: ghcr.io/datagems-eosc/datagems-eosc/moma-management:v2.11.0
     labels:
       - traefik.enable=false
     ports:
