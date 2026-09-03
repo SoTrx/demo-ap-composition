@@ -7,11 +7,17 @@ include .env
 # kiota generate -l python -d http://moma-management:5000/openapi.json -o generated/moma_management -c MomaManagementClient
 MOMA_MANAGEMENT_URL ?= $(or $(MOMA_MANAGEMENT_SERVICE_URL),http://moma-management:5000)
 AP_MANAGEMENT_URL ?= $(or $(AP_MANAGEMENT_SERVICE_URL),http://ap-management:5000)
+# ap-executor's spec is vendored (openapi/ap_executor.json) so `make clients`
+# works offline; refresh it from a running executor with:
+#   curl -s http://ap-executor:5000/openapi.json > openapi/ap_executor.json
+AP_EXECUTOR_SPEC ?= openapi/ap_executor.json
 
 clients:
 	rm -rf generated
 	echo "Generating clients from OpenAPI specs..."
 	echo "MOMA_MANAGEMENT_URL=${MOMA_MANAGEMENT_URL}"
 	echo "AP_MANAGEMENT_URL=${AP_MANAGEMENT_URL}"
+	echo "AP_EXECUTOR_SPEC=${AP_EXECUTOR_SPEC}"
 	kiota generate --clear-cache --ll Debug -l python -d ${MOMA_MANAGEMENT_URL}/openapi.json -o generated/moma_management -c MomaManagementClient
 	kiota generate --clear-cache --ll Debug -l python -d ${AP_MANAGEMENT_URL}/openapi.json -o generated/ap_management -c ApManagementClient
+	kiota generate --clear-cache --ll Debug -l python -d ${AP_EXECUTOR_SPEC} -o generated/ap_executor -c ApExecutorClient

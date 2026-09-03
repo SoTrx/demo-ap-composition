@@ -11,6 +11,12 @@ services:
       - "8501:8501"
     environment:
       - AP_MANAGEMENT_SERVICE_URL=http://ap-management:5000
+      # The Execute and Plan + Execute tabs are disabled unless AP_EXECUTOR_EXECUTE_URL
+      # is set (in .env or the environment) to a reachable executor's execute endpoint,
+      # e.g. http://datagems.127.0.0.1.sslip.io:8080/moma2/v1/api/aps/execute
+      # AP_EXECUTOR_SERVICE_URL only sets the base URL for the stock /api/v1/aps/execute route.
+      - AP_EXECUTOR_SERVICE_URL=${AP_EXECUTOR_SERVICE_URL:-http://ap-executor:5000}
+      - AP_EXECUTOR_EXECUTE_URL=${AP_EXECUTOR_EXECUTE_URL:-}
       - STREAMLIT_SERVER_BASE_URL_PATH=${APP_BASE_URL_PATH:-/}
     restart: always
     healthcheck:

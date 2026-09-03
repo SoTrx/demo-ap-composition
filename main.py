@@ -1,12 +1,30 @@
 import asyncio
+import json
 from pathlib import Path
 
+import httpx
 import streamlit as st
 from kiota_abstractions.api_error import APIError
 
-from api import compose_aps, plan_ap, seed_aps_to_moma
+from api import (
+    AP_EXECUTOR_EXECUTE_URL,
+    EXECUTION_ENABLED,
+    compose_aps,
+    execute_ap,
+    plan_ap,
+    seed_aps_to_moma,
+)
 from generated.ap_management.models.error_response import ErrorResponse
-from utils import ap_to_graphviz, list_ap_files, load_ap_json
+from utils import (
+    ap_to_graphviz,
+    extract_operator_output,
+    format_type,
+    list_ap_files,
+    load_ap_json,
+    operator_execution_order,
+    operator_input_sources,
+    operator_output_targets,
+)
 
 TITLE = "Analytical Pattern Explorer"
 
@@ -112,7 +130,239 @@ def _apply_plan_preset() -> None:
     st.session_state["plan_task"] = task
 
 
-tab_compose, tab_plan = st.tabs(["⚡ Compose", "📋 Plan"])
+_EXEC_PRESET_PLACEHOLDER = "— Select a preset —"
+_EXEC_PRESETS: list[dict] = json.loads(
+    (Path(__file__).parent / "presets" / "execute_presets.json").read_text()
+)
+_EXEC_PRESET_LABELS = [_EXEC_PRESET_PLACEHOLDER] + [p["label"] for p in _EXEC_PRESETS]
+_EXEC_PRESET_MAP = {p["label"]: p for p in _EXEC_PRESETS}
+
+
+def _apply_exec_preset() -> None:
+    preset = _EXEC_PRESET_MAP.get(st.session_state.get("exec_preset"))
+    if preset:
+        st.session_state["exec_ap_json"] = json.dumps(preset["instance"], indent=2)
+
+
+def _apply_planexec_preset() -> None:
+    preset = _EXEC_PRESET_MAP.get(st.session_state.get("planexec_preset"))
+    if preset:
+        st.session_state["planexec_task"] = preset["nl"]
+
+
+def _seed_state_from_params(ap_data: dict | None, params: list | None) -> dict:
+    """Best-effort ``state`` (``{operator_id: {input_name: value}}``) built by
+    matching each suggested parameter's ``name`` to an operator input of the
+    same name."""
+    state: dict[str, dict] = {}
+    if not ap_data or not params:
+        return state
+    op_nodes = [n for n in ap_data.get("nodes", []) if "Operator" in n.get("labels", [])]
+    for param in params:
+        name, value = param.get("name"), param.get("suggested_value")
+        if name is None or value is None:
+            continue
+        for node in op_nodes:
+            inputs = node.get("properties", {}).get("inputs") or []
+            if any(i.get("name") == name for i in inputs):
+                state.setdefault(node.get("id"), {})[name] = value
+    return state
+
+
+def _split_instance(data) -> tuple[dict | None, dict]:
+    """Accept an AP *instance* (``{"ap": {...}, "state": {...}}``) — the shape
+    ap-executor's ``/execute`` takes — or, for convenience, a bare AP template
+    (``{"nodes": [...], "edges": [...]}``). Returns ``(ap, state)`` or
+    ``(None, {})`` if it is neither."""
+    if isinstance(data, dict) and isinstance(data.get("ap"), dict):
+        return data["ap"], (data.get("state") or {})
+    if isinstance(data, dict) and data.get("nodes"):
+        return data, {}
+    return None, {}
+
+
+def _err_detail(exc: ErrorResponse) -> str:
+    """A useful message even when the service returned an empty body (e.g. a bare
+    502 from a gateway in front of ap-management), where ``detail`` is ``None``."""
+    return exc.detail or (
+        f"upstream service returned HTTP {getattr(exc, 'response_status_code', '?')} "
+        "with no detail (it is likely down or its own upstream — e.g. the LLM at "
+        "LLM_API_BASE — failed)")
+
+
+def _short(value) -> str:
+    text = value if isinstance(value, str) else json.dumps(value, sort_keys=True)
+    return text if len(text) <= 200 else text[:197] + "…"
+
+
+_STATUS_ICON = {
+    "success": "✅", "error": "❌", "skipped": "⏭️",
+    "running": "⏳", "pending": "⏳",
+}
+
+
+def _render_exec_plan(
+    ap_data: dict,
+    state: dict,
+    *,
+    results_by_id: dict | None = None,
+    status_by_id: dict | None = None,
+    errors_by_id: dict | None = None,
+) -> None:
+    """The operator sequence ap-executor walks, and — per step — where each input
+    comes from and where each output goes.
+
+    Before a run (``results_by_id``/``status_by_id`` are ``None``) it is a preview
+    of what **Execute** will do; after a run it is filled in with the real
+    per-operator status and output values.
+    """
+    ops = operator_execution_order(ap_data)
+    if not ops:
+        st.info("This Analytical Pattern has no operators to execute.")
+        return
+
+    ran = results_by_id is not None or status_by_id is not None
+    st.caption(
+        f"ap-executor {'ran' if ran else 'will run'} these {len(ops)} operator(s) "
+        "in dependency order, feeding each one's outputs into the operators "
+        "downstream:")
+
+    for pos, op in enumerate(ops, 1):
+        oid = op["id"]
+        props = op.get("properties", {}) or {}
+        title = props.get("name") or (op.get("labels") or ["Operator"])[0]
+        step = props.get("step")
+        bits = [f"**{pos}. {title}**"]
+        if step is not None:
+            bits.append(f"· step {step}")
+        if status_by_id and status_by_id.get(oid):
+            s = status_by_id[oid]
+            bits.append(f"· {_STATUS_ICON.get(s, '')} `{s}`")
+        st.markdown(" ".join(bits))
+        if props.get("description"):
+            st.caption(props["description"])
+
+        op_state = (state or {}).get(oid, {}) or {}
+        wired, extras = operator_input_sources(ap_data, oid)
+        pending = "produced at run time"
+
+        inputs = props.get("inputs") or []
+        if inputs:
+            st.markdown("_Inputs_")
+            in_rows = []
+            for p in inputs:
+                nm = p.get("name")
+                src = wired.get(nm)
+                if nm in op_state:
+                    source_cell, value_cell = "caller `state`", _short(op_state[nm])
+                elif src:
+                    source_cell = src["label"]
+                    resolved = None
+                    if (results_by_id and src["output_name"]
+                            and src["producer_id"] in results_by_id):
+                        resolved = extract_operator_output(
+                            results_by_id[src["producer_id"]], src["output_name"])
+                    value_cell = (
+                        _short(resolved) if resolved is not None
+                        else "—" if ran
+                        else pending
+                    )
+                else:
+                    source_cell, value_cell = "—", "— not set —"
+                in_rows.append({
+                    "Parameter": nm,
+                    "Type": format_type(p),
+                    "Required": p.get("required"),
+                    "Source": source_cell,
+                    "Value": value_cell,
+                })
+            st.table(in_rows)
+        if extras:
+            st.caption("Also wired in: " + ", ".join(f"`{e}`" for e in extras))
+
+        outputs = props.get("outputs") or []
+        targets = operator_output_targets(ap_data, oid)
+        if outputs:
+            st.markdown("_Outputs_")
+            out_rows = []
+            for p in outputs:
+                nm = p.get("name")
+                if results_by_id and oid in results_by_id:
+                    value_cell = _short(extract_operator_output(results_by_id[oid], nm))
+                elif errors_by_id and oid in errors_by_id:
+                    value_cell = f"⚠️ {_short(errors_by_id[oid])}"
+                else:
+                    value_cell = "—" if ran else pending
+                out_rows.append({
+                    "Parameter": nm,
+                    "Type": format_type(p),
+                    "Value": value_cell,
+                    "Flows to": targets.get(nm) or "final result",
+                })
+            st.table(out_rows)
+
+        if pos < len(ops):
+            st.markdown(
+                "<div style='text-align:center;color:#888;font-size:1.3rem;"
+                "line-height:1'>&#8595;</div>",
+                unsafe_allow_html=True,
+            )
+
+
+def _render_execution_result(ap_data: dict, exec_result: dict, state: dict | None = None) -> None:
+    operators = exec_result.get("operators") or []
+    status_by_id = {o.get("operator_id"): o.get("status") for o in operators}
+    results_by_id = {
+        o.get("operator_id"): o.get("result")
+        for o in operators if o.get("status") == "success"
+    }
+    errors_by_id = {
+        o.get("operator_id"): o.get("error")
+        for o in operators if o.get("status") != "success" and o.get("error") is not None
+    }
+
+    overall = exec_result.get("status", "?")
+    st.subheader("Execution result")
+    _banner = {"success": st.success, "error": st.error, "failed": st.error}.get(
+        overall, st.info)
+    _banner(f"{_STATUS_ICON.get(overall, '')} **Overall status:** `{overall}`")
+
+    _render_exec_plan(
+        ap_data, state or {},
+        results_by_id=results_by_id,
+        status_by_id=status_by_id,
+        errors_by_id=errors_by_id,
+    )
+
+    terminals = [
+        o for o in operator_execution_order(ap_data)
+        if not operator_output_targets(ap_data, o["id"])
+        and o["id"] in results_by_id
+    ]
+    if terminals:
+        st.markdown("**Final result**")
+        for o in terminals:
+            res = results_by_id[o["id"]]
+            (st.json if isinstance(res, (dict, list)) else st.write)(res)
+
+    if operators:
+        st.table([
+            {
+                "Operator": o.get("operator_name"),
+                "Status": o.get("status"),
+                "Mode": o.get("execution_mode") or "—",
+                "Service": o.get("service_instance") or "—",
+                "Result / error": _short(
+                    o.get("result") if o.get("status") == "success" else o.get("error")),
+            }
+            for o in operators
+        ])
+    with st.expander("Raw executor response (JSON)"):
+        st.json(exec_result)
+
+
+tab_compose, tab_plan, tab_execute, tab_planexec = st.tabs(
+    ["⚡ Compose", "📋 Plan", "▶️ Execute", "📋▶️ Plan + Execute"])
 
 with tab_compose:
     st.markdown(
@@ -174,7 +424,7 @@ with tab_compose:
                 with st.expander("Raw composer response (JSON)"):
                     st.json(result)
             except ErrorResponse as exc:
-                st.warning(f"Composition impossible: {exc.detail}")
+                st.warning(f"Composition impossible: {_err_detail(exc)}")
             except APIError as exc:
                 st.error(
                     f"Compose request failed with status {exc.response_status_code}")
@@ -232,7 +482,155 @@ with tab_plan:
             with st.expander("Raw planner response (JSON)"):
                 st.json(result)
         except ErrorResponse as exc:
-            st.warning(f"Plan impossible: {exc.detail}")
+            st.warning(f"Plan impossible: {_err_detail(exc)}")
         except APIError as exc:
             st.error(
                 f"Plan request failed with status {exc.response_status_code}")
+
+def _executor_disabled_notice() -> None:
+    st.warning(
+        "`AP_EXECUTOR_EXECUTE_URL` is not provided, execution is disabled on this instance.")
+
+
+with tab_execute:
+    st.markdown(
+        "Load an **Analytical Pattern instance** — `{ \"ap\": { … }, \"state\": { … } }`, "
+        "the template plus the per-operator parameter values to run it with — then click "
+        "**Execute**. Execution walks the operators in dependency order on the configured "
+        "[`ap-executor`](https://github.com/SoTrx/ap-executor), feeding each operator's "
+        "output into the next."
+    )
+
+    st.selectbox(
+        "Preset",
+        _EXEC_PRESET_LABELS,
+        key="exec_preset",
+        on_change=_apply_exec_preset,
+        help="Load a ready-made Analytical Pattern instance into the editor below.",
+    )
+
+    _active_exec_preset = _EXEC_PRESET_MAP.get(st.session_state.get("exec_preset"))
+    if _active_exec_preset and _active_exec_preset.get("description"):
+        st.caption(_active_exec_preset["description"])
+
+    st.divider()
+
+    st.session_state.setdefault("exec_ap_json", "")
+
+    ap_text = st.text_area(
+        "Analytical Pattern instance (JSON)", key="exec_ap_json", height=360,
+        placeholder='Pick a preset above, or paste {"ap": {"nodes": …}, "state": {…}} here…',
+    )
+
+    parsed = None
+    if ap_text.strip():
+        try:
+            parsed = json.loads(ap_text)
+        except json.JSONDecodeError as exc:
+            st.error(f"Invalid JSON: {exc}")
+
+    exec_ap_data, exec_state = _split_instance(parsed) if parsed is not None else (None, {})
+
+    if not EXECUTION_ENABLED:
+        _executor_disabled_notice()
+
+    if parsed is None:
+        st.info("Choose a preset above or paste an Analytical Pattern instance to run.")
+    elif exec_ap_data is None:
+        st.warning(
+            'Expected an AP instance `{ "ap": { "nodes": … }, "state": { … } }` '
+            '(a bare `{ "nodes": … }` template is also accepted).')
+    else:
+        st.subheader("What Execute will do")
+        _render_exec_plan(exec_ap_data, exec_state)
+        if not exec_state:
+            st.caption("`state` is empty — operators will run without caller parameters.")
+
+        if st.button("▶️ Execute", type="primary", width='stretch',
+                     disabled=not EXECUTION_ENABLED):
+            try:
+                with st.spinner("Executing on ap-executor…"):
+                    exec_result = asyncio.run(execute_ap(exec_ap_data, exec_state))
+                _render_execution_result(exec_ap_data, exec_result, exec_state)
+            except ErrorResponse as exc:
+                st.warning(f"Execution impossible: {_err_detail(exc)}")
+            except (httpx.HTTPError, ConnectionError, OSError):
+                st.error(
+                    f"Couldn't reach ap-executor at `{AP_EXECUTOR_EXECUTE_URL}`. "
+                    "Check `AP_EXECUTOR_EXECUTE_URL`.")
+            except APIError as exc:
+                st.error(
+                    f"Execute request failed with status {exc.response_status_code}")
+            except Exception as exc:  # noqa: BLE001 — surface unexpected errors
+                st.error(f"Execution error: {exc}")
+
+with tab_planexec:
+    st.markdown(
+        "Describe a task, then click **Plan + Execute**: `/plan` selects and wires the "
+        "Analytical Patterns for it, its suggested instantiation parameters seed the "
+        "`state`, and the resulting instance is run on the configured "
+        "[`ap-executor`](https://github.com/SoTrx/ap-executor) — Plan and Execute in one go."
+    )
+
+    st.selectbox(
+        "Preset",
+        _EXEC_PRESET_LABELS,
+        key="planexec_preset",
+        on_change=_apply_planexec_preset,
+        help="Pre-fill the task with a predefined example.",
+    )
+
+    _active_planexec_preset = _EXEC_PRESET_MAP.get(st.session_state.get("planexec_preset"))
+    if _active_planexec_preset and _active_planexec_preset.get("description"):
+        st.caption(_active_planexec_preset["description"])
+
+    st.divider()
+
+    if not EXECUTION_ENABLED:
+        _executor_disabled_notice()
+
+    pe_task = st.text_input("Task", key="planexec_task",
+                            placeholder="Describe the task…")
+
+    if st.button("📋▶️ Plan + Execute", type="primary", width='stretch',
+                 disabled=not (pe_task and EXECUTION_ENABLED)):
+        try:
+            with st.spinner("Planning…"):
+                plan_result = asyncio.run(plan_ap(pe_task))
+
+            if not plan_result.get("nodes"):
+                st.warning("Planning produced no Analytical Pattern.")
+                st.json(plan_result)
+            else:
+                pe_ap_data = {k: v for k, v in plan_result.items()
+                              if k != "instantiation_parameters"}
+                pe_params = plan_result.get("instantiation_parameters") or []
+                pe_state = _seed_state_from_params(pe_ap_data, pe_params)
+
+                st.subheader("Planned Analytical Pattern")
+                st.graphviz_chart(ap_to_graphviz(pe_ap_data), width='stretch')
+                if pe_params:
+                    st.subheader("Suggested Instantiation Parameters")
+                    st.table([
+                        {
+                            "Name": p.get("name"),
+                            "Type": p.get("type"),
+                            "Required": p.get("required"),
+                            "Suggested value": p.get("suggested_value"),
+                        }
+                        for p in pe_params
+                    ])
+
+                with st.spinner("Executing on ap-executor…"):
+                    pe_result = asyncio.run(execute_ap(pe_ap_data, pe_state))
+                _render_execution_result(pe_ap_data, pe_result, pe_state)
+        except ErrorResponse as exc:
+            st.warning(f"Plan + execute impossible: {_err_detail(exc)}")
+        except (httpx.HTTPError, ConnectionError, OSError):
+            st.error(
+                f"Couldn't reach ap-executor at `{AP_EXECUTOR_EXECUTE_URL}`. "
+                "Check `AP_EXECUTOR_EXECUTE_URL`.")
+        except APIError as exc:
+            st.error(f"Request failed with status {exc.response_status_code}")
+        except Exception as exc:  # noqa: BLE001 — surface unexpected errors
+            st.error(f"Plan + execute error: {exc}")

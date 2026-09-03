@@ -1,0 +1,237 @@
+[
+  {
+    "label": "text to sql + explain on mathe",
+    "description": "Translate a natural-language question into SQL against the MathE database, then return ProvSQL provenance for that query.",
+    "nl": "List the topics where a student answered incorrectly at question level 4.",
+    "instance": {
+      "ap": {
+        "$schema": "https://raw.githubusercontent.com/datagems-eosc/moma-management/refs/tags/v2.9.0/moma_management/domain/schema/moma.schema.json",
+        "nodes": [
+          {
+            "id": "b1d4e2a0-0000-4000-8000-000000000001",
+            "labels": [
+              "Analytical_Pattern"
+            ],
+            "properties": {
+              "name": "Ask MathE with a real text-to-sql, then explain the answer",
+              "description": "Translates a natural-language question into SQL, then returns ProvSQL provenance for that query over the MathE database.",
+              "process": "query",
+              "publishedDate": "2026-09-01"
+            }
+          },
+          {
+            "id": "b1d4e2a0-0000-4000-8000-000000000007",
+            "labels": [
+              "Operator",
+              "Text_To_SQL_Operator"
+            ],
+            "properties": {
+              "name": "Text to SQL",
+              "description": "Translates a natural-language question into a SQL query, against the schema it reflects from parameters.db_info.",
+              "step": 1,
+              "inputs": [
+                {
+                  "name": "question",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "parameters",
+                  "type": "object",
+                  "required": true
+                }
+              ],
+              "outputs": [
+                {
+                  "name": "sql_query",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            }
+          },
+          {
+            "id": "b1d4e2a0-0000-4000-8000-000000000008",
+            "labels": [
+              "ResultType"
+            ],
+            "properties": {
+              "name": "query",
+              "description": "The generated SQL. Bare ResultType, not [ResultType, string]: a concrete type here makes moma's MappingStep reject the AP, because the mapping writes into ap-explanation's array-typed `nodes` input. See README.md."
+            }
+          },
+          {
+            "id": "b1d4e2a0-0000-4000-8000-000000000002",
+            "labels": [
+              "Operator",
+              "Provenance_SQL_Operator"
+            ],
+            "properties": {
+              "name": "Explain SQL",
+              "description": "Runs a SQL query with ProvSQL provenance tracking and explains the result.",
+              "command": "query",
+              "queryType": "SELECT",
+              "type": "SQL Query",
+              "step": 2,
+              "query": "",
+              "inputs": [
+                {
+                  "name": "nodes",
+                  "type": "array",
+                  "required": true
+                },
+                {
+                  "name": "edges",
+                  "type": "array",
+                  "required": true
+                }
+              ],
+              "outputs": [
+                {
+                  "name": "derivations",
+                  "type": "array",
+                  "required": true
+                },
+                {
+                  "name": "explanation",
+                  "type": "string",
+                  "required": false
+                }
+              ]
+            }
+          },
+          {
+            "id": "b1d4e2a0-0000-4000-8000-000000000003",
+            "labels": [
+              "RelationalDatabase"
+            ],
+            "properties": {
+              "name": "mathe",
+              "description": "The MathE database"
+            }
+          },
+          {
+            "id": "b1d4e2a0-0000-4000-8000-000000000004",
+            "labels": [
+              "Table"
+            ],
+            "properties": {
+              "name": "mathe.assessment",
+              "description": "Assessment table containing student answers"
+            }
+          },
+          {
+            "id": "b1d4e2a0-0000-4000-8000-000000000005",
+            "labels": [
+              "Table"
+            ],
+            "properties": {
+              "name": "mathe.platform__sna__questions",
+              "description": "Questions table containing question metadata"
+            }
+          },
+          {
+            "id": "b1d4e2a0-0000-4000-8000-000000000006",
+            "labels": [
+              "Table"
+            ],
+            "properties": {
+              "name": "mathe.platform__topic",
+              "description": "Topic table containing topic metadata"
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "b1d4e2a0-0000-4000-8000-000000000001",
+            "to": "b1d4e2a0-0000-4000-8000-000000000007",
+            "labels": [
+              "consist_of"
+            ]
+          },
+          {
+            "from": "b1d4e2a0-0000-4000-8000-000000000001",
+            "to": "b1d4e2a0-0000-4000-8000-000000000002",
+            "labels": [
+              "consist_of"
+            ]
+          },
+          {
+            "from": "b1d4e2a0-0000-4000-8000-000000000007",
+            "to": "b1d4e2a0-0000-4000-8000-000000000008",
+            "labels": [
+              "output"
+            ],
+            "properties": {
+              "mapping": {
+                "to['query']": "from['outputs']['sql_query']"
+              }
+            }
+          },
+          {
+            "from": "b1d4e2a0-0000-4000-8000-000000000008",
+            "to": "b1d4e2a0-0000-4000-8000-000000000002",
+            "labels": [
+              "input"
+            ],
+            "properties": {
+              "mapping": {
+                "to['inputs']['nodes'][3]['properties']['query']": "from['query']"
+              }
+            }
+          },
+          {
+            "from": "b1d4e2a0-0000-4000-8000-000000000003",
+            "to": "b1d4e2a0-0000-4000-8000-000000000002",
+            "labels": [
+              "input"
+            ]
+          },
+          {
+            "from": "b1d4e2a0-0000-4000-8000-000000000003",
+            "to": "b1d4e2a0-0000-4000-8000-000000000004",
+            "labels": [
+              "containedIn"
+            ]
+          },
+          {
+            "from": "b1d4e2a0-0000-4000-8000-000000000003",
+            "to": "b1d4e2a0-0000-4000-8000-000000000005",
+            "labels": [
+              "containedIn"
+            ]
+          },
+          {
+            "from": "b1d4e2a0-0000-4000-8000-000000000003",
+            "to": "b1d4e2a0-0000-4000-8000-000000000006",
+            "labels": [
+              "containedIn"
+            ]
+          },
+          {
+            "from": "b1d4e2a0-0000-4000-8000-000000000002",
+            "to": "b1d4e2a0-0000-4000-8000-000000000007",
+            "labels": [
+              "follows"
+            ]
+          }
+        ]
+      },
+      "state": {
+        "b1d4e2a0-0000-4000-8000-000000000007": {
+          "question": "List the topics where a student answered incorrectly at question level 4.",
+          "parameters": {
+            "db_info": {
+              "db_host": "postgres.shared.svc.cluster.local",
+              "db_port": 5432,
+              "db_database": "mathe",
+              "db_username": "provdemo",
+              "db_pass": "provdemo",
+              "db_schema": "mathe"
+            }
+          }
+        }
+      }
+    }
+  }
+]

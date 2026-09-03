@@ -1,0 +1,214 @@
+{
+  "$schema": "https://raw.githubusercontent.com/datagems-eosc/moma-management/refs/tags/v2.3.0/moma_management/domain/schema/moma.schema.json",
+  "nodes": [
+    {
+      "id": "d0000000-0000-0000-0000-000000000001",
+      "labels": [
+        "Analytical_Pattern"
+      ],
+      "properties": {
+        "name": "Magic E2E Test Pattern",
+        "description": "Two parallel magic_operator producers (one sync_http, one async_http) feeding a third magic_operator consumer -- used by the CI e2e test suite.",
+        "process": "e2e-test",
+        "publishedDate": "2026-07-27"
+      }
+    },
+    {
+      "id": "d0000000-0000-0000-0000-000000000002",
+      "labels": [
+        "Magic_Echo_A_Operator",
+        "Operator"
+      ],
+      "properties": {
+        "name": "Magic Echo A",
+        "description": "Renders a summary prompt for a topic and returns the (mocked) LLM response. Runs in sync_http mode.",
+        "version": "1.0.0",
+        "inputs": [
+          {
+            "name": "topic",
+            "type": "string",
+            "required": true,
+            "default": ""
+          }
+        ],
+        "outputs": [
+          {
+            "name": "summary",
+            "type": "string",
+            "required": true,
+            "default": ""
+          }
+        ]
+      }
+    },
+    {
+      "id": "d0000000-0000-0000-0000-000000000003",
+      "labels": [
+        "Magic_Echo_B_Operator",
+        "Operator"
+      ],
+      "properties": {
+        "name": "Magic Echo B",
+        "description": "Renders a tone-of-voice prompt for an audience and returns the (mocked) LLM response. Runs in async_http mode.",
+        "version": "1.0.0",
+        "inputs": [
+          {
+            "name": "audience",
+            "type": "string",
+            "required": true,
+            "default": ""
+          }
+        ],
+        "outputs": [
+          {
+            "name": "tone",
+            "type": "string",
+            "required": true,
+            "default": ""
+          }
+        ]
+      }
+    },
+    {
+      "id": "d0000000-0000-0000-0000-000000000004",
+      "labels": [
+        "ResultType",
+        "string"
+      ],
+      "properties": {
+        "name": "summary"
+      }
+    },
+    {
+      "id": "d0000000-0000-0000-0000-000000000005",
+      "labels": [
+        "ResultType",
+        "string"
+      ],
+      "properties": {
+        "name": "tone"
+      }
+    },
+    {
+      "id": "d0000000-0000-0000-0000-000000000006",
+      "labels": [
+        "Magic_Combine_Operator",
+        "Operator"
+      ],
+      "properties": {
+        "name": "Magic Combine",
+        "description": "Combines the summary and tone produced upstream into one final message. Runs in sync_http mode.",
+        "version": "1.0.0",
+        "inputs": [
+          {
+            "name": "summary",
+            "type": "string",
+            "required": true,
+            "default": ""
+          },
+          {
+            "name": "tone",
+            "type": "string",
+            "required": true,
+            "default": ""
+          }
+        ],
+        "outputs": [
+          {
+            "name": "message",
+            "type": "string",
+            "required": true,
+            "default": ""
+          }
+        ]
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "d0000000-0000-0000-0000-000000000001",
+      "to": "d0000000-0000-0000-0000-000000000002",
+      "labels": [
+        "consist_of"
+      ]
+    },
+    {
+      "from": "d0000000-0000-0000-0000-000000000001",
+      "to": "d0000000-0000-0000-0000-000000000003",
+      "labels": [
+        "consist_of"
+      ]
+    },
+    {
+      "from": "d0000000-0000-0000-0000-000000000001",
+      "to": "d0000000-0000-0000-0000-000000000006",
+      "labels": [
+        "consist_of"
+      ]
+    },
+    {
+      "from": "d0000000-0000-0000-0000-000000000002",
+      "to": "d0000000-0000-0000-0000-000000000004",
+      "labels": [
+        "output"
+      ],
+      "properties": {
+        "mapping": {
+          "to['summary']": "from['outputs']['summary']"
+        }
+      }
+    },
+    {
+      "from": "d0000000-0000-0000-0000-000000000004",
+      "to": "d0000000-0000-0000-0000-000000000006",
+      "labels": [
+        "input"
+      ],
+      "properties": {
+        "mapping": {
+          "to['inputs']['summary']": "from['summary']"
+        }
+      }
+    },
+    {
+      "from": "d0000000-0000-0000-0000-000000000003",
+      "to": "d0000000-0000-0000-0000-000000000005",
+      "labels": [
+        "output"
+      ],
+      "properties": {
+        "mapping": {
+          "to['tone']": "from['outputs']['tone']"
+        }
+      }
+    },
+    {
+      "from": "d0000000-0000-0000-0000-000000000005",
+      "to": "d0000000-0000-0000-0000-000000000006",
+      "labels": [
+        "input"
+      ],
+      "properties": {
+        "mapping": {
+          "to['inputs']['tone']": "from['tone']"
+        }
+      }
+    },
+    {
+      "from": "d0000000-0000-0000-0000-000000000006",
+      "to": "d0000000-0000-0000-0000-000000000002",
+      "labels": [
+        "follows"
+      ],
+      "properties": {}
+    },
+    {
+      "from": "d0000000-0000-0000-0000-000000000006",
+      "to": "d0000000-0000-0000-0000-000000000003",
+      "labels": [
+        "follows"
+      ],
+      "properties": {}
+    }
+  ]
+}

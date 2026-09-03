@@ -1,0 +1,617 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "AP Executor API",
+    "description": "API for orchestrating Analytical Pattern operator execution via Consul-discovered operator implementations",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/": {
+      "get": {
+        "summary": "Index",
+        "operationId": "index__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/aps/execute": {
+      "post": {
+        "tags": [
+          "analytical patterns"
+        ],
+        "summary": "Execute an AP synchronously",
+        "description": "Accepts an AP instance ({ap, state}), resolves operator execution order, injects parameters, and runs each operator. Returns the full result inline.",
+        "operationId": "execute_ap_sync_api_v1_aps_execute_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApInstance"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExecutionResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/aps/execute/async": {
+      "post": {
+        "tags": [
+          "analytical patterns"
+        ],
+        "summary": "Execute an AP asynchronously",
+        "description": "Schedules the AP instance execution as a Dapr workflow instance and returns a task_id (HTTP 202).",
+        "operationId": "execute_ap_async_api_v1_aps_execute_async_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApInstance"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AsyncExecutionTaskResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/aps/execute/async/{task_id}": {
+      "get": {
+        "tags": [
+          "analytical patterns"
+        ],
+        "summary": "Poll async execution result",
+        "description": "Returns the current status and result of a previously dispatched async execution task.",
+        "operationId": "get_task_status_api_v1_aps_execute_async__task_id__get",
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Task Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskStatusResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/health": {
+      "get": {
+        "summary": "Health Check",
+        "description": "Liveness check \u2013 returns service version info.",
+        "operationId": "health_check_api_v1_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ready": {
+      "get": {
+        "summary": "Readiness Check",
+        "description": "Readiness check \u2013 verifies that Consul (operator registry) and the local\nDapr sidecar (workflow orchestration) are reachable before the service\nis considered ready to handle traffic.\n\nReturns HTTP 200 with ``status: ready`` when all dependencies are reachable,\nor HTTP 503 with ``status: not_ready`` together with per-dependency details\nwhen at least one dependency is unavailable.",
+        "operationId": "readiness_check_api_v1_ready_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AnalyticalPattern": {
+        "properties": {
+          "nodes": {
+            "items": {
+              "$ref": "#/components/schemas/Node"
+            },
+            "type": "array",
+            "title": "Nodes"
+          },
+          "edges": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Edge"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Edges"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nodes"
+        ],
+        "title": "AnalyticalPattern"
+      },
+      "ApInstance": {
+        "properties": {
+          "ap": {
+            "$ref": "#/components/schemas/AnalyticalPattern"
+          },
+          "state": {
+            "additionalProperties": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "object",
+            "title": "State",
+            "default": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "ap"
+        ],
+        "title": "ApInstance",
+        "description": "An AP *instance*: an AP template plus the runtime values to execute it with.\n\n``state`` is namespaced by operator node id, mapping each operator's input\nname to its caller-supplied value (or, once executed, its output):\n``{node_id: {name: value}}``."
+      },
+      "AsyncExecutionTaskResponse": {
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "title": "Task Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "pending"
+          }
+        },
+        "type": "object",
+        "required": [
+          "task_id"
+        ],
+        "title": "AsyncExecutionTaskResponse",
+        "description": "Response returned when an async execution is dispatched."
+      },
+      "Edge": {
+        "properties": {
+          "from": {
+            "type": "string",
+            "format": "uuid",
+            "title": "From"
+          },
+          "to": {
+            "type": "string",
+            "format": "uuid",
+            "title": "To"
+          },
+          "labels": {
+            "items": {
+              "$ref": "#/components/schemas/EdgeLabel"
+            },
+            "type": "array",
+            "title": "Labels"
+          },
+          "properties": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Properties"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "from",
+          "to",
+          "labels"
+        ],
+        "title": "Edge"
+      },
+      "EdgeLabel": {
+        "type": "string",
+        "enum": [
+          "distribution",
+          "recordSet",
+          "linkTo",
+          "containedIn",
+          "field",
+          "source/fileObject",
+          "source/fileSet",
+          "statistics",
+          "intervalStatistics",
+          "consist_of",
+          "input",
+          "output",
+          "follows",
+          "uses",
+          "is_accomplished_by",
+          "perform_inference",
+          "is_measured_by",
+          "fitted_on",
+          "trained_on",
+          "VIRTUAL_BELONGS_TO"
+        ],
+        "title": "EdgeLabel"
+      },
+      "ExecutionResult": {
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/ExecutionStatus"
+          },
+          "operators": {
+            "items": {
+              "$ref": "#/components/schemas/OperatorResult"
+            },
+            "type": "array",
+            "title": "Operators",
+            "default": []
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "workflow_instance_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Workflow Instance Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "ExecutionResult",
+        "description": "Full result of executing an Analytical Pattern."
+      },
+      "ExecutionStatus": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "running",
+          "success",
+          "partial_success",
+          "error"
+        ],
+        "title": "ExecutionStatus",
+        "description": "Overall status of the AP execution."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "Node": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "labels": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Labels"
+          },
+          "properties": {
+            "patternProperties": {
+              "^[a-z@][a-zA-Z0-9_]*$": {}
+            },
+            "type": "object",
+            "title": "Properties"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "labels",
+          "properties"
+        ],
+        "title": "Node"
+      },
+      "OperatorResult": {
+        "properties": {
+          "operator_id": {
+            "type": "string",
+            "title": "Operator Id"
+          },
+          "operator_name": {
+            "type": "string",
+            "title": "Operator Name"
+          },
+          "operator_labels": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Operator Labels"
+          },
+          "operator_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Operator Version"
+          },
+          "status": {
+            "$ref": "#/components/schemas/OperatorStatus"
+          },
+          "result": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "service_instance": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service Instance"
+          },
+          "execution_mode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Execution Mode"
+          }
+        },
+        "type": "object",
+        "required": [
+          "operator_id",
+          "operator_name",
+          "operator_labels",
+          "status"
+        ],
+        "title": "OperatorResult",
+        "description": "Result of executing a single AP operator."
+      },
+      "OperatorStatus": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "running",
+          "success",
+          "error",
+          "skipped"
+        ],
+        "title": "OperatorStatus",
+        "description": "Status of a single operator execution."
+      },
+      "Properties": {
+        "properties": {
+          "mapping": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mapping"
+          }
+        },
+        "type": "object",
+        "title": "Properties"
+      },
+      "TaskStatusResponse": {
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "title": "Task Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "result": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "task_id",
+          "status"
+        ],
+        "title": "TaskStatusResponse",
+        "description": "Response returned when polling for a task result."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}
