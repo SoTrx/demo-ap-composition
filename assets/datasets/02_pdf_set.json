@@ -1,0 +1,57 @@
+{
+    "nodes": [
+        {
+            "id": "d2000000-0000-4000-8000-000000000001",
+            "labels": [
+                "sc:Dataset"
+            ],
+            "properties": {
+                "type": "sc:Dataset",
+                "name": "Climate Policy Report Corpus",
+                "description": "A collection of national climate policy reports published as PDF documents.",
+                "datePublished": "2026-03-02",
+                "version": "1.0.0",
+                "license": "CC-BY-4.0",
+                "keywords": [
+                    "climate",
+                    "policy",
+                    "reports"
+                ],
+                "fieldOfScience": [
+                    "Environmental science"
+                ],
+                "status": "ready"
+            }
+        },
+        {
+            "id": "d2000000-0000-4000-8000-000000000002",
+            "labels": [
+                "PdfSet",
+                "UnstructuredData",
+                "Data"
+            ],
+            "properties": {
+                "type": "cr:FileSet",
+                "name": "policy-reports",
+                "description": "The PDF documents making up the corpus.",
+                "contentUrl": "https://data.example.org/climate/policy-reports.zip",
+                "encodingFormat": "application/pdf",
+                "pagesCount": 1840,
+                "keywords": [
+                    "climate",
+                    "mitigation",
+                    "adaptation"
+                ]
+            }
+        }
+    ],
+    "edges": [
+        {
+            "from": "d2000000-0000-4000-8000-000000000001",
+            "to": "d2000000-0000-4000-8000-000000000002",
+            "labels": [
+                "distribution"
+            ]
+        }
+    ]
+}

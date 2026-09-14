@@ -1,0 +1,23 @@
+Debug: KiotaBuilder kiota version 1.35.0
+Information: KiotaBuilder loaded description from local source
+Debug: KiotaBuilder step 1 - reading the stream - took 00:00:00.0164473
+Warning: KiotaBuilder OpenAPI warning: #/ - A servers entry (v3) or host + basePath + schemes properties (v2) was not present in the OpenAPI description. The root URL will need to be set manually with the request adapter.
+Debug: KiotaBuilder step 2 - parsing the document - took 00:00:00.0650547
+Debug: KiotaBuilder step 3 - updating generation configuration from kiota extension - took 00:00:00.0000729
+Debug: KiotaBuilder step 4 - filtering API paths with patterns - took 00:00:00.0015297
+Warning: KiotaBuilder No server url found in the OpenAPI document. The base url will need to be set when using the client.
+Debug: KiotaBuilder step 5 - checking whether the output should be updated - took 00:00:00.0171040
+Debug: KiotaBuilder step 6 - create uri space - took 00:00:00.0023148
+Debug: KiotaBuilder InitializeInheritanceIndex 00:00:00.0021877
+Debug: KiotaBuilder CreateRequestBuilderClass 00:00:00.0483383
+Debug: KiotaBuilder CreateWebhookModels 00:00:00.0002832
+Debug: KiotaBuilder MapTypeDefinitions 00:00:00.0041152
+Debug: KiotaBuilder TrimInheritedModels 00:00:00.0053595
+Debug: KiotaBuilder CleanUpInternalState 00:00:00.0003749
+Debug: KiotaBuilder step 7 - create source model - took 00:00:00.0608965
+Debug: KiotaBuilder 39ms: Language refinement applied
+Debug: KiotaBuilder step 8 - refine by language - took 00:00:00.0421033
+Debug: KiotaBuilder step 9 - writing files - took 00:00:00.0452974
+Information: KiotaBuilder loaded description from local source
+Debug: KiotaBuilder step 10 - writing lock file - took 00:00:00.0104821
+Debug: KiotaBuilder Api manifest path: /workspaces/frontend/apimanifest.json

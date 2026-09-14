@@ -11,8 +11,10 @@ from api import (
     EXECUTION_ENABLED,
     compose_aps,
     execute_ap,
+    list_datasets,
     plan_ap,
     seed_aps_to_moma,
+    seed_datasets_to_moma,
 )
 from generated.ap_management.models.error_response import ErrorResponse
 from utils import (
@@ -24,6 +26,7 @@ from utils import (
     operator_execution_order,
     operator_input_sources,
     operator_output_targets,
+    summarize_dataset_kinds,
 )
 
 TITLE = "Analytical Pattern Explorer"
@@ -32,9 +35,17 @@ TITLE = "Analytical Pattern Explorer"
 @st.cache_resource
 def _warmup_moma() -> None:
     asyncio.run(seed_aps_to_moma())
+    asyncio.run(seed_datasets_to_moma())
 
 
 _warmup_moma()
+
+
+@st.cache_data(ttl=60)
+def _datasets() -> list[dict]:
+    """Datasets moma-management holds, for the Plan tabs' picker."""
+    return asyncio.run(list_datasets())
+
 
 st.set_page_config(page_title=TITLE, layout="wide")
 st.title(TITLE)
@@ -104,30 +115,108 @@ def _is_valid_ap(sel: str) -> bool:
     return sel != _PLACEHOLDER and sel not in _headers
 
 
+# The demo datasets seeded into moma-management from assets/datasets/. Referenced by
+# the presets below so a preset can put the planner on a compatible — or deliberately
+# incompatible — dataset in one click.
+_RELATIONAL_DATASET = "d1000000-0000-4000-8000-000000000001"
+_PDF_DATASET = "d2000000-0000-4000-8000-000000000001"
+
 _PLAN_PRESET_PLACEHOLDER = "— Select a preset —"
-_PLAN_PRESETS: list[tuple[str, str, str]] = [
-    (_PLAN_PRESET_PLACEHOLDER, "", ""),
-    ("NL To SQL + Explain (OK Scenario)", "Convert \"Find my stuff\"  into SQL and compute the provenance of the result",
-     "Selects and wires the patterns needed to translate a natural-language question into SQL and produce a human-readable explanation."),
-    ("NL To SQL + Explain + Report (OK Scenario)",
-     "Translate \"Find my stuff\" to SQL, explain the query with provenance information, and produce a structured provenance report", "3 Steps workflow"),
-    ("Impossible request (KO Scenario)", "Make a chocolate cake",
-     "There are no chocolate cake info"),
-    ("Partial request (KO Scenario)", "Convert \"Find my stuff\" into SQL and then convert the SQL to JSON",
-     "The query-to-SQL pattern is available, but the SQL-to-JSON pattern is missing, so the plan cannot be completed. This is expected to FAIL"),
+_PLAN_PRESETS: list[dict] = [
+    {"label": _PLAN_PRESET_PLACEHOLDER},
+    {
+        "label": "NL To SQL + Explain (OK Scenario)",
+        "task": "Convert \"Find my stuff\"  into SQL and compute the provenance of the result",
+        "description": "Selects and wires the patterns needed to translate a natural-language question into SQL and produce a human-readable explanation.",
+    },
+    {
+        "label": "NL To SQL + Explain + Report (OK Scenario)",
+        "task": "Translate \"Find my stuff\" to SQL, explain the query with provenance information, and produce a structured provenance report",
+        "description": "3 Steps workflow",
+    },
+    {
+        "label": "Grounded on a relational dataset (OK Scenario)",
+        "task": "Convert \"Find my stuff\" into SQL and compute the provenance of the result",
+        "dataset_ids": [_RELATIONAL_DATASET],
+        "description": "Same task, but grounded on the University Enrolment Database. Its kinds (RelationalDatabase, Table) let the SQL operators apply, and its real table and column names ground the suggested parameter values.",
+    },
+    {
+        "label": "Incompatible dataset (KO Scenario)",
+        "task": "Convert \"Find my stuff\" into SQL and compute the provenance of the result",
+        "dataset_ids": [_PDF_DATASET],
+        "description": "The same SQL task against the Climate Policy Report Corpus, a PdfSet. No SQL operator can run on it, so ap-management rejects the plan with a 422 up front instead of letting the executor fail later. This is expected to FAIL.",
+    },
+    {
+        "label": "Impossible request (KO Scenario)",
+        "task": "Make a chocolate cake",
+        "description": "There are no chocolate cake info",
+    },
+    {
+        "label": "Partial request (KO Scenario)",
+        "task": "Convert \"Find my stuff\" into SQL and then convert the SQL to JSON",
+        "description": "The query-to-SQL pattern is available, but the SQL-to-JSON pattern is missing, so the plan cannot be completed. This is expected to FAIL — tick **Allow magic operator** and re-run to see the gap filled instead.",
+    },
+    {
+        "label": "Magic operator fills the gap (OK Scenario)",
+        "task": "Convert \"Find my stuff\" into SQL and then convert the SQL to JSON",
+        "allow_magic": True,
+        "description": "The same partial request, with the magic operator allowed. The missing SQL-to-JSON step is filled by a generic LLM-backed operator the planner writes an instruction for, instead of failing with a 404.",
+    },
 ]
-_PLAN_PRESET_LABELS = [label for label, _, _ in _PLAN_PRESETS]
-_PLAN_PRESET_MAP = {label: (task, desc)
-                    for label, task, desc in _PLAN_PRESETS if task}
+_PLAN_PRESET_LABELS = [preset["label"] for preset in _PLAN_PRESETS]
+_PLAN_PRESET_MAP = {p["label"]: p for p in _PLAN_PRESETS if p.get("task")}
 
 
-def _apply_plan_preset() -> None:
-    label = st.session_state.get("plan_preset")
-    entry = _PLAN_PRESET_MAP.get(label)
-    if not entry:
+def _apply_plan_preset(prefix: str) -> None:
+    """Fill one Plan tab's widgets from the selected preset.
+
+    ``prefix`` namespaces the widget keys so the Plan and Plan + Execute tabs keep
+    independent task / dataset / magic-operator state.
+    """
+    preset = _PLAN_PRESET_MAP.get(st.session_state.get(f"{prefix}_preset"))
+    if not preset:
         return
-    task, _ = entry
-    st.session_state["plan_task"] = task
+    st.session_state[f"{prefix}_task"] = preset["task"]
+    # Only offer dataset ids moma actually holds: seeding it is best-effort, and
+    # Streamlit raises if a multiselect default is not among its options.
+    available = {d["id"] for d in _datasets()}
+    st.session_state[f"{prefix}_datasets"] = [
+        id for id in preset.get("dataset_ids", []) if id in available]
+    st.session_state[f"{prefix}_magic"] = preset.get("allow_magic", False)
+
+
+def _plan_controls(prefix: str) -> tuple[list[str], bool]:
+    """The dataset picker and magic-operator toggle shared by both Plan tabs."""
+    datasets = _datasets()
+    by_id = {d["id"]: d for d in datasets}
+
+    def _label(id: str) -> str:
+        dataset = by_id.get(id, {})
+        kinds = ", ".join(summarize_dataset_kinds(dataset.get("kinds") or []))
+        return f"{dataset.get('name', id)}" + (f" — {kinds}" if kinds else "")
+
+    if datasets:
+        dataset_ids = st.multiselect(
+            "Datasets", [d["id"] for d in datasets], format_func=_label,
+            key=f"{prefix}_datasets",
+            help="Ground the plan on these datasets. Their kinds constrain which "
+                 "operators can apply — a SQL operator needs a relational or tabular "
+                 "dataset — and their tables and columns ground the suggested "
+                 "parameter values. Leave empty to plan without any dataset.",
+        )
+    else:
+        dataset_ids = []
+        st.caption(
+            "No datasets in moma-management, so the plan cannot be grounded on one. "
+            "They are seeded from `assets/datasets/` at startup.")
+
+    allow_magic = st.checkbox(
+        "Allow magic operator", key=f"{prefix}_magic",
+        help="Let a step no catalogued Analytical Pattern covers be filled by a "
+             "generic LLM-backed operator, instead of failing with a 404. The planner "
+             "writes the instruction that operator runs with.",
+    )
+    return dataset_ids, allow_magic
 
 
 _EXEC_PRESET_PLACEHOLDER = "— Select a preset —"
@@ -151,22 +240,99 @@ def _apply_planexec_preset() -> None:
 
 
 def _seed_state_from_params(ap_data: dict | None, params: list | None) -> dict:
-    """Best-effort ``state`` (``{operator_id: {input_name: value}}``) built by
-    matching each suggested parameter's ``name`` to an operator input of the
-    same name."""
+    """``state`` (``{operator_id: {input_name: value}}``) for ap-executor, built from
+    the planner's suggested parameters.
+
+    Each parameter names the operator it belongs to (``operator_id``), which is exactly
+    how the executor keys its runtime state, so it is used directly. The older
+    match-by-input-name scan is kept only as a fallback for a parameter that arrives
+    without one: it writes the value into *every* operator declaring an input of that
+    name, which is wrong as soon as two operators share an input name — and a magic
+    operator's ``instruction`` is precisely such a case.
+    """
     state: dict[str, dict] = {}
     if not ap_data or not params:
         return state
     op_nodes = [n for n in ap_data.get("nodes", []) if "Operator" in n.get("labels", [])]
+    op_ids = {n.get("id") for n in op_nodes}
     for param in params:
         name, value = param.get("name"), param.get("suggested_value")
         if name is None or value is None:
+            continue
+        operator_id = param.get("operator_id")
+        if operator_id in op_ids:
+            state.setdefault(operator_id, {})[name] = value
             continue
         for node in op_nodes:
             inputs = node.get("properties", {}).get("inputs") or []
             if any(i.get("name") == name for i in inputs):
                 state.setdefault(node.get("id"), {})[name] = value
     return state
+
+
+def _render_plan_result(result: dict) -> dict:
+    """Render a ``/plan`` response — graph, datasets it was grounded on, whether a
+    magic operator filled a gap, and the suggested parameters. Returns the AP."""
+    ap_data = result.get("ap") or {}
+
+    st.subheader("Planned Analytical Pattern")
+    if ap_data.get("nodes"):
+        st.graphviz_chart(ap_to_graphviz(ap_data), width='stretch')
+    else:
+        st.json(result)
+
+    datasets = result.get("datasets") or []
+    if datasets:
+        st.caption("Grounded on: " + " · ".join(
+            f"**{d.get('name')}** ({', '.join(d.get('kinds') or []) or 'no kinds'})"
+            for d in datasets))
+
+    if result.get("used_magic_operator"):
+        st.info(
+            "✨ A **magic operator** filled a step no catalogued Analytical Pattern "
+            "covers. Its `instruction` parameter below is the prompt ap-management "
+            "generated for it.")
+
+    params = result.get("instantiation_parameters") or []
+    if params:
+        st.subheader("Suggested Instantiation Parameters")
+        st.table([
+            {
+                "Operator": p.get("operator_name") or "—",
+                "Name": p.get("name"),
+                "Type": p.get("type"),
+                "Required": p.get("required"),
+                "Suggested value": p.get("suggested_value"),
+            }
+            for p in params
+        ])
+
+    return ap_data
+
+
+def _plan_error(exc: ErrorResponse, prefix: str) -> None:
+    """Report a ``/plan`` failure by what the status actually means.
+
+    ap-management separates these deliberately, and collapsing them into one "plan
+    impossible" hides the most instructive case — an AP was found, but no chosen
+    dataset can carry it.
+    """
+    status = getattr(exc, "response_status_code", None)
+    detail = _err_detail(exc)
+    if status == 404:
+        st.warning(
+            f"{prefix}: no Analytical Pattern covers this task (try **Allow magic "
+            f"operator**), or a selected dataset id is unknown to moma-management.\n\n{detail}")
+    elif status == 422:
+        st.warning(
+            f"{prefix}: Analytical Patterns were found, but they cannot be composed, or "
+            f"none of the selected datasets is compatible with them.\n\n{detail}")
+    elif status == 502:
+        st.error(
+            f"{prefix}: an upstream service ap-management depends on failed — the LLM at "
+            f"`LLM_API_BASE`, or moma-management.\n\n{detail}")
+    else:
+        st.warning(f"{prefix}: {detail}")
 
 
 def _split_instance(data) -> tuple[dict | None, dict]:
@@ -434,7 +600,9 @@ with tab_compose:
 with tab_plan:
     st.markdown(
         "Describe a task and click **Plan** to call the `/plan` endpoint, "
-        "which selects and wires the Analytical Patterns needed to fulfil it."
+        "which selects and wires the Analytical Patterns needed to fulfil it. "
+        "Optionally ground the plan on one or more **datasets**, and allow a "
+        "**magic operator** to fill any step no catalogued pattern covers."
     )
 
     st.selectbox(
@@ -442,47 +610,33 @@ with tab_plan:
         _PLAN_PRESET_LABELS,
         key="plan_preset",
         on_change=_apply_plan_preset,
-        help="Pre-fill the task with a predefined example.",
+        args=("plan",),
+        help="Pre-fill the task, datasets and magic-operator toggle with a "
+             "predefined example.",
     )
 
     _active_plan_preset = st.session_state.get(
         "plan_preset", _PLAN_PRESET_PLACEHOLDER)
     _active_plan_entry = _PLAN_PRESET_MAP.get(_active_plan_preset)
     if _active_plan_entry:
-        st.caption(_active_plan_entry[1])
+        st.caption(_active_plan_entry["description"])
 
     st.divider()
 
     task = st.text_input("Task", key="plan_task",
                          placeholder="Describe the task…")
+    plan_dataset_ids, plan_allow_magic = _plan_controls("plan")
 
     if st.button("📋 Plan", type="primary", width='stretch', disabled=not task):
         try:
             with st.spinner("Planning…"):
-                result = asyncio.run(plan_ap(task))
-            st.subheader("Planned Analytical Pattern")
-            if result.get("nodes"):
-                st.graphviz_chart(ap_to_graphviz(result), width='stretch')
-            else:
-                st.json(result)
-
-            params = result.get("instantiation_parameters") or []
-            if params:
-                st.subheader("Suggested Instantiation Parameters")
-                st.table([
-                    {
-                        "Name": p.get("name"),
-                        "Type": p.get("type"),
-                        "Required": p.get("required"),
-                        "Suggested value": p.get("suggested_value"),
-                    }
-                    for p in params
-                ])
-
+                result = asyncio.run(plan_ap(
+                    task, plan_dataset_ids, plan_allow_magic))
+            _render_plan_result(result)
             with st.expander("Raw planner response (JSON)"):
                 st.json(result)
         except ErrorResponse as exc:
-            st.warning(f"Plan impossible: {_err_detail(exc)}")
+            _plan_error(exc, "Plan impossible")
         except APIError as exc:
             st.error(
                 f"Plan request failed with status {exc.response_status_code}")
@@ -569,7 +723,8 @@ with tab_planexec:
         "Describe a task, then click **Plan + Execute**: `/plan` selects and wires the "
         "Analytical Patterns for it, its suggested instantiation parameters seed the "
         "`state`, and the resulting instance is run on the configured "
-        "[`ap-executor`](https://github.com/SoTrx/ap-executor) — Plan and Execute in one go."
+        "[`ap-executor`](https://github.com/SoTrx/ap-executor) — Plan and Execute in one go. "
+        "The dataset and magic-operator controls work exactly as in the **Plan** tab."
     )
 
     st.selectbox(
@@ -591,41 +746,42 @@ with tab_planexec:
 
     pe_task = st.text_input("Task", key="planexec_task",
                             placeholder="Describe the task…")
+    pe_dataset_ids, pe_allow_magic = _plan_controls("planexec")
 
     if st.button("📋▶️ Plan + Execute", type="primary", width='stretch',
                  disabled=not (pe_task and EXECUTION_ENABLED)):
         try:
             with st.spinner("Planning…"):
-                plan_result = asyncio.run(plan_ap(pe_task))
+                plan_result = asyncio.run(plan_ap(
+                    pe_task, pe_dataset_ids, pe_allow_magic))
 
-            if not plan_result.get("nodes"):
+            pe_ap_data = plan_result.get("ap") or {}
+            if not pe_ap_data.get("nodes"):
                 st.warning("Planning produced no Analytical Pattern.")
                 st.json(plan_result)
             else:
-                pe_ap_data = {k: v for k, v in plan_result.items()
-                              if k != "instantiation_parameters"}
                 pe_params = plan_result.get("instantiation_parameters") or []
                 pe_state = _seed_state_from_params(pe_ap_data, pe_params)
 
-                st.subheader("Planned Analytical Pattern")
-                st.graphviz_chart(ap_to_graphviz(pe_ap_data), width='stretch')
-                if pe_params:
-                    st.subheader("Suggested Instantiation Parameters")
-                    st.table([
-                        {
-                            "Name": p.get("name"),
-                            "Type": p.get("type"),
-                            "Required": p.get("required"),
-                            "Suggested value": p.get("suggested_value"),
-                        }
-                        for p in pe_params
-                    ])
+                _render_plan_result(plan_result)
+
+                if plan_result.get("used_magic_operator"):
+                    # Planning a magic operator and being able to run it are two
+                    # different things: the executor resolves it in Consul by
+                    # slugifying its node name, so a "magic-operator" service must be
+                    # registered there, declaring the same `instruction` + payload
+                    # inputs. Say so before the run rather than after it fails.
+                    st.warning(
+                        "This plan contains a ✨ magic operator. Executing it requires a "
+                        "`magic-operator` service registered with the executor, declaring "
+                        "an `instruction` input and the payload input shown above. "
+                        "Without it the run fails to resolve the operator.")
 
                 with st.spinner("Executing on ap-executor…"):
                     pe_result = asyncio.run(execute_ap(pe_ap_data, pe_state))
                 _render_execution_result(pe_ap_data, pe_result, pe_state)
         except ErrorResponse as exc:
-            st.warning(f"Plan + execute impossible: {_err_detail(exc)}")
+            _plan_error(exc, "Plan + execute impossible")
         except (httpx.HTTPError, ConnectionError, OSError):
             st.error(
                 f"Couldn't reach ap-executor at `{AP_EXECUTOR_EXECUTE_URL}`. "

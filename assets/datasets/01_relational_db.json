@@ -1,0 +1,181 @@
+{
+    "nodes": [
+        {
+            "id": "d1000000-0000-4000-8000-000000000001",
+            "labels": [
+                "sc:Dataset"
+            ],
+            "properties": {
+                "type": "sc:Dataset",
+                "name": "University Enrolment Database",
+                "description": "A relational database holding student records, course catalogue and enrolments for a university.",
+                "datePublished": "2026-05-12",
+                "version": "1.2.0",
+                "license": "CC-BY-4.0",
+                "keywords": [
+                    "students",
+                    "courses",
+                    "enrolment",
+                    "education"
+                ],
+                "fieldOfScience": [
+                    "Social sciences"
+                ],
+                "status": "ready"
+            }
+        },
+        {
+            "id": "d1000000-0000-4000-8000-000000000002",
+            "labels": [
+                "RelationalDatabase",
+                "StructuredData",
+                "Data"
+            ],
+            "properties": {
+                "type": "cr:FileObject",
+                "name": "enrolment-pg",
+                "description": "PostgreSQL instance backing the enrolment records.",
+                "encodingFormat": "application/sql",
+                "engine": "PostgreSQL",
+                "connectionString": "postgresql://reader@db.example.org:5432/enrolment"
+            }
+        },
+        {
+            "id": "d1000000-0000-4000-8000-000000000003",
+            "labels": [
+                "Table",
+                "Data"
+            ],
+            "properties": {
+                "type": "cr:FileObject",
+                "name": "students",
+                "description": "One row per enrolled student.",
+                "primaryKey": [
+                    "id"
+                ]
+            }
+        },
+        {
+            "id": "d1000000-0000-4000-8000-000000000004",
+            "labels": [
+                "ColumnTable",
+                "Column"
+            ],
+            "properties": {
+                "type": "cr:Field",
+                "name": "id",
+                "description": "Student identifier.",
+                "dataType": "integer",
+                "column": "id"
+            }
+        },
+        {
+            "id": "d1000000-0000-4000-8000-000000000005",
+            "labels": [
+                "ColumnTable",
+                "Column"
+            ],
+            "properties": {
+                "type": "cr:Field",
+                "name": "age",
+                "description": "Age of the student in years.",
+                "dataType": "integer",
+                "column": "age"
+            }
+        },
+        {
+            "id": "d1000000-0000-4000-8000-000000000006",
+            "labels": [
+                "ColumnTable",
+                "Column"
+            ],
+            "properties": {
+                "type": "cr:Field",
+                "name": "full_name",
+                "description": "Full name of the student.",
+                "dataType": "string",
+                "column": "full_name"
+            }
+        },
+        {
+            "id": "d1000000-0000-4000-8000-000000000007",
+            "labels": [
+                "Table",
+                "Data"
+            ],
+            "properties": {
+                "type": "cr:FileObject",
+                "name": "courses",
+                "description": "One row per course offered.",
+                "primaryKey": [
+                    "code"
+                ]
+            }
+        },
+        {
+            "id": "d1000000-0000-4000-8000-000000000008",
+            "labels": [
+                "ColumnTable",
+                "Column"
+            ],
+            "properties": {
+                "type": "cr:Field",
+                "name": "code",
+                "description": "Course code.",
+                "dataType": "string",
+                "column": "code"
+            }
+        }
+    ],
+    "edges": [
+        {
+            "from": "d1000000-0000-4000-8000-000000000001",
+            "to": "d1000000-0000-4000-8000-000000000002",
+            "labels": [
+                "distribution"
+            ]
+        },
+        {
+            "from": "d1000000-0000-4000-8000-000000000002",
+            "to": "d1000000-0000-4000-8000-000000000003",
+            "labels": [
+                "containedIn"
+            ]
+        },
+        {
+            "from": "d1000000-0000-4000-8000-000000000002",
+            "to": "d1000000-0000-4000-8000-000000000007",
+            "labels": [
+                "containedIn"
+            ]
+        },
+        {
+            "from": "d1000000-0000-4000-8000-000000000003",
+            "to": "d1000000-0000-4000-8000-000000000004",
+            "labels": [
+                "containedIn"
+            ]
+        },
+        {
+            "from": "d1000000-0000-4000-8000-000000000003",
+            "to": "d1000000-0000-4000-8000-000000000005",
+            "labels": [
+                "containedIn"
+            ]
+        },
+        {
+            "from": "d1000000-0000-4000-8000-000000000003",
+            "to": "d1000000-0000-4000-8000-000000000006",
+            "labels": [
+                "containedIn"
+            ]
+        },
+        {
+            "from": "d1000000-0000-4000-8000-000000000007",
+            "to": "d1000000-0000-4000-8000-000000000008",
+            "labels": [
+                "containedIn"
+            ]
+        }
+    ]
+}

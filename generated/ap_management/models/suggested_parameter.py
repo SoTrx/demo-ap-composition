@@ -16,6 +16,10 @@ class SuggestedParameter(AdditionalDataHolder, Parsable):
     required: Optional[bool] = True
     # The name property
     name: Optional[str] = None
+    # The operator_id property
+    operator_id: Optional[str] = None
+    # The operator_name property
+    operator_name: Optional[str] = None
     # The type property
     type: Optional[str] = None
     
@@ -37,6 +41,8 @@ class SuggestedParameter(AdditionalDataHolder, Parsable):
         """
         fields: dict[str, Callable[[Any], None]] = {
             "name": lambda n : setattr(self, 'name', n.get_str_value()),
+            "operator_id": lambda n : setattr(self, 'operator_id', n.get_str_value()),
+            "operator_name": lambda n : setattr(self, 'operator_name', n.get_str_value()),
             "required": lambda n : setattr(self, 'required', n.get_bool_value()),
             "type": lambda n : setattr(self, 'type', n.get_str_value()),
         }
@@ -51,6 +57,8 @@ class SuggestedParameter(AdditionalDataHolder, Parsable):
         if writer is None:
             raise TypeError("writer cannot be null.")
         writer.write_str_value("name", self.name)
+        writer.write_str_value("operator_id", self.operator_id)
+        writer.write_str_value("operator_name", self.operator_name)
         writer.write_bool_value("required", self.required)
         writer.write_str_value("type", self.type)
         writer.write_additional_data_value(self.additional_data)

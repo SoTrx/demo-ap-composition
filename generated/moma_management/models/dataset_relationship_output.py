@@ -4,38 +4,48 @@ from dataclasses import dataclass, field
 from kiota_abstractions.serialization import AdditionalDataHolder, Parsable, ParseNode, SerializationWriter
 from typing import Any, Optional, TYPE_CHECKING, Union
 
+if TYPE_CHECKING:
+    from .edge import Edge
+    from .node import Node
+
 @dataclass
-class PlanPayload(AdditionalDataHolder, Parsable):
+class DatasetRelationshipOutput(AdditionalDataHolder, Parsable):
+    """
+    A Dataset Relationship ("dataset linking") graph.Rooted at a ``BasicDLElement`` node, it links exactly two ``sc:Dataset``nodes via ``HAS_TARGET`` edges (directly and/or through intermediate``PropertyComparison``/``TextEvidence`` nodes).
+    """
     # Stores additional data not described in the OpenAPI description found when deserializing. Can be used for serialization as well.
     additional_data: dict[str, Any] = field(default_factory=dict)
 
-    # Allow steps no catalogued AP covers to be filled by a generic LLM-backed 'magic' operator, instead of failing with 404. Off by default.
-    allow_magic_operator: Optional[bool] = False
-    # IDs of the datasets the plan must run against, as returned by cross-dataset-discovery. Their types constrain which operators can apply and ground the suggested instantiation parameters. The planned AP contains no dataset nodes; it is only guaranteed to be compatible with them.
-    dataset_ids: Optional[list[str]] = None
-    # The natural-language task to plan an AP for.
-    task: Optional[str] = None
+    # The edges property
+    edges: Optional[list[Edge]] = None
+    # The nodes property
+    nodes: Optional[list[Node]] = None
     
     @staticmethod
-    def create_from_discriminator_value(parse_node: ParseNode) -> PlanPayload:
+    def create_from_discriminator_value(parse_node: ParseNode) -> DatasetRelationshipOutput:
         """
         Creates a new instance of the appropriate class based on discriminator value
         param parse_node: The parse node to use to read the discriminator value and create the object
-        Returns: PlanPayload
+        Returns: DatasetRelationshipOutput
         """
         if parse_node is None:
             raise TypeError("parse_node cannot be null.")
-        return PlanPayload()
+        return DatasetRelationshipOutput()
     
     def get_field_deserializers(self,) -> dict[str, Callable[[ParseNode], None]]:
         """
         The deserialization information for the current model
         Returns: dict[str, Callable[[ParseNode], None]]
         """
+        from .edge import Edge
+        from .node import Node
+
+        from .edge import Edge
+        from .node import Node
+
         fields: dict[str, Callable[[Any], None]] = {
-            "allow_magic_operator": lambda n : setattr(self, 'allow_magic_operator', n.get_bool_value()),
-            "dataset_ids": lambda n : setattr(self, 'dataset_ids', n.get_collection_of_primitive_values(str)),
-            "task": lambda n : setattr(self, 'task', n.get_str_value()),
+            "edges": lambda n : setattr(self, 'edges', n.get_collection_of_object_values(Edge)),
+            "nodes": lambda n : setattr(self, 'nodes', n.get_collection_of_object_values(Node)),
         }
         return fields
     
@@ -47,9 +57,8 @@ class PlanPayload(AdditionalDataHolder, Parsable):
         """
         if writer is None:
             raise TypeError("writer cannot be null.")
-        writer.write_bool_value("allow_magic_operator", self.allow_magic_operator)
-        writer.write_collection_of_primitive_values("dataset_ids", self.dataset_ids)
-        writer.write_str_value("task", self.task)
+        writer.write_collection_of_object_values("edges", self.edges)
+        writer.write_collection_of_object_values("nodes", self.nodes)
         writer.write_additional_data_value(self.additional_data)
     
 

@@ -70,15 +70,22 @@ services:
       - internal
 
   ap-management:
-    image: ghcr.io/datagems-eosc/datagems-eosc/ap-management:v1.8.0
+    image: ghcr.io/datagems-eosc/datagems-eosc/ap-management:v1.9.0
     labels:
       - traefik.enable=false
     environment:
       - MOMA_MANAGEMENT_URL=http://moma-management:5000
       - LLM_API_BASE=${LLM_API_BASE}
       - LLM_API_KEY=${LLM_API_KEY}
-      - LLM_API_MODEL=openai/scayle_qwen
+      - LLM_API_MODEL=openai/scayle_qwen3.8-flash-next
       - LLM_SSL_VERIFY=false
+      # The planner emits this as the node name of a magic operator; the executor
+      # slugifies it into the Consul service name it resolves ("Magic Operator" ->
+      # "magic-operator"), so it must match the deployed operator's service name.
+      - MAGIC_OPERATOR_NAME=${MAGIC_OPERATOR_NAME:-Magic Operator}
+      # Leave empty: pinning a version filters the Consul lookup on Service.Meta.version,
+      # which consul-k8s Service Sync cannot set.
+      - MAGIC_OPERATOR_VERSION=${MAGIC_OPERATOR_VERSION:-}
     healthcheck:
       test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:5000')\" || exit 1"]
       interval: 10s

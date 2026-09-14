@@ -6,6 +6,7 @@ from typing import Any, Optional, TYPE_CHECKING, Union
 
 if TYPE_CHECKING:
     from .analytical_pattern import AnalyticalPattern
+    from .dataset_ref import DatasetRef
     from .suggested_parameter import SuggestedParameter
 
 @dataclass
@@ -16,8 +17,12 @@ class PlanResult(AdditionalDataHolder, Parsable):
     # Stores additional data not described in the OpenAPI description found when deserializing. Can be used for serialization as well.
     additional_data: dict[str, Any] = field(default_factory=dict)
 
+    # The used_magic_operator property
+    used_magic_operator: Optional[bool] = False
     # The ap property
     ap: Optional[AnalyticalPattern] = None
+    # The datasets property
+    datasets: Optional[list[DatasetRef]] = None
     # The instantiation_parameters property
     instantiation_parameters: Optional[list[SuggestedParameter]] = None
     
@@ -38,14 +43,18 @@ class PlanResult(AdditionalDataHolder, Parsable):
         Returns: dict[str, Callable[[ParseNode], None]]
         """
         from .analytical_pattern import AnalyticalPattern
+        from .dataset_ref import DatasetRef
         from .suggested_parameter import SuggestedParameter
 
         from .analytical_pattern import AnalyticalPattern
+        from .dataset_ref import DatasetRef
         from .suggested_parameter import SuggestedParameter
 
         fields: dict[str, Callable[[Any], None]] = {
             "ap": lambda n : setattr(self, 'ap', n.get_object_value(AnalyticalPattern)),
+            "datasets": lambda n : setattr(self, 'datasets', n.get_collection_of_object_values(DatasetRef)),
             "instantiation_parameters": lambda n : setattr(self, 'instantiation_parameters', n.get_collection_of_object_values(SuggestedParameter)),
+            "used_magic_operator": lambda n : setattr(self, 'used_magic_operator', n.get_bool_value()),
         }
         return fields
     
@@ -58,7 +67,9 @@ class PlanResult(AdditionalDataHolder, Parsable):
         if writer is None:
             raise TypeError("writer cannot be null.")
         writer.write_object_value("ap", self.ap)
+        writer.write_collection_of_object_values("datasets", self.datasets)
         writer.write_collection_of_object_values("instantiation_parameters", self.instantiation_parameters)
+        writer.write_bool_value("used_magic_operator", self.used_magic_operator)
         writer.write_additional_data_value(self.additional_data)
     
 

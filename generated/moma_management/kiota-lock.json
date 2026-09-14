@@ -1,8 +1,8 @@
 {
-  "descriptionHash": "44A92C37A1A2F75A31A1F6C69DC74A955EB11B94564B3DA7609A898F1C20E278938071A0D25403907D233D4EFD20C7DFF8AFEF45816C35760C649D3E93552E51",
+  "descriptionHash": "428EA80648DD095134A548801C2C13F55301E1E9AE8E9067AA26B2D2B9ED94F1427378FC7794231547F339B441A3417B70345292F2F4D6607E6306CE1C745414",
   "descriptionLocation": "http://moma-management:5000/openapi.json",
   "lockFileVersion": "1.0.0",
-  "kiotaVersion": "1.34.1",
+  "kiotaVersion": "1.35.0",
   "clientClassName": "MomaManagementClient",
   "typeAccessModifier": "Public",
   "clientNamespaceName": "ApiSdk",

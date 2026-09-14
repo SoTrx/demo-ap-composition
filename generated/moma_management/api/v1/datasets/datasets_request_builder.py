@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from .croissant.croissant_request_builder import CroissantRequestBuilder
     from .empty_path_segment_request_builder import EmptyPathSegmentRequestBuilder
     from .item.datasets_item_request_builder import DatasetsItemRequestBuilder
+    from .relationships.relationships_request_builder import RelationshipsRequestBuilder
     from .validate.validate_request_builder import ValidateRequestBuilder
 
 class DatasetsRequestBuilder(BaseRequestBuilder):
@@ -65,6 +66,15 @@ class DatasetsRequestBuilder(BaseRequestBuilder):
         from .empty_path_segment_request_builder import EmptyPathSegmentRequestBuilder
 
         return EmptyPathSegmentRequestBuilder(self.request_adapter, self.path_parameters)
+    
+    @property
+    def relationships(self) -> RelationshipsRequestBuilder:
+        """
+        The relationships property
+        """
+        from .relationships.relationships_request_builder import RelationshipsRequestBuilder
+
+        return RelationshipsRequestBuilder(self.request_adapter, self.path_parameters)
     
     @property
     def validate(self) -> ValidateRequestBuilder:

@@ -2,7 +2,7 @@
   "descriptionHash": "D96E9B0365501078077B787EC88267FC43D9EABB9940E8E68FAD6A65B2A26C94BB645A5DFEE8AB6A25789E043984FDD51B8CC3EDB1C861C0C61D634B9720A220",
   "descriptionLocation": "../../openapi/ap_executor.json",
   "lockFileVersion": "1.0.0",
-  "kiotaVersion": "1.34.1",
+  "kiotaVersion": "1.35.0",
   "clientClassName": "ApExecutorClient",
   "typeAccessModifier": "Public",
   "clientNamespaceName": "ApiSdk",

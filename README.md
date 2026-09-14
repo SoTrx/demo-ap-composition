@@ -5,12 +5,13 @@ A Streamlit app for exploring **Analytical Patterns (APs)** across four stages:
 | Tab | What it does | Service |
 |-----|--------------|---------|
 | **⚡ Compose** | Wire two APs together into one combined pattern | `ap-management` `POST /api/v1/aps/compose` |
-| **📋 Plan** | Turn a natural-language task into a wired AP + suggested instantiation parameters | `ap-management` `POST /api/v1/aps/plan` |
+| **📋 Plan** | Turn a natural-language task — optionally grounded on **datasets** — into a wired AP + suggested instantiation parameters | `ap-management` `POST /api/v1/aps/plan` |
 | **▶️ Execute** | Run an AP *instance* (`{ap, state}`) — from a preset or pasted/edited by hand — and show per-operator results on the graph | `ap-executor` `POST …/aps/execute` |
 | **📋▶️ Plan + Execute** | Plan a task, seed `state` from its suggested parameters, and execute the result in one step | `ap-management` `/plan` → `ap-executor` `…/aps/execute` |
 
 Every AP is rendered as a Graphviz graph; in the Execute tabs, operator nodes are
-recoloured by execution status.
+recoloured by execution status, and a ✨ plum node is a **magic operator** the planner
+generated (see below).
 
 The **Execute** and **Plan + Execute** tabs are disabled unless
 `AP_EXECUTOR_EXECUTE_URL` points at a reachable executor (see below).
@@ -37,8 +38,9 @@ graph TD
 
     User --> Streamlit
     Streamlit -->|"compose / plan"| APMgmt
+    Streamlit -->|"list / seed datasets"| Moma
     APMgmt -->|"Bolt"| Neo4j
-    APMgmt --> Moma
+    APMgmt -->|"APs + datasets"| Moma
     Streamlit -.->|"execute (when AP_EXECUTOR_EXECUTE_URL is set)"| APExec
 ```
 
@@ -52,6 +54,37 @@ notice, until `AP_EXECUTOR_EXECUTE_URL` is set to a reachable executor (see
 below). `Execute` runs the instance you load/paste as-is; `Plan + Execute` first
 calls `/plan`, seeds `state` from the returned suggested parameters, and executes
 the result.
+
+**Datasets and the magic operator:**
+
+`POST /aps/plan` takes two optional inputs beyond the task, both surfaced in the
+**Plan** and **Plan + Execute** tabs:
+
+- **`dataset_ids`** — datasets, held by `moma-management`, that the plan must run
+  against. Their *kinds* constrain which operators may apply (a SQL operator needs a
+  `RelationalDatabase`/`Table`/`CsvSet`, an OCR operator a `PdfSet`…) and their tables
+  and columns ground the suggested parameter values. If none of the chosen datasets is
+  compatible with the planned AP, `ap-management` rejects the plan with a **422** up
+  front rather than letting the executor fail later. The planned AP itself contains no
+  dataset nodes — it is only guaranteed to be *compatible* with them.
+
+  Two demo datasets in `assets/datasets/` are seeded into `moma-management` at startup:
+  *University Enrolment Database* (`RelationalDatabase`, `Table` — works with the SQL
+  patterns) and *Climate Policy Report Corpus* (`PdfSet` — deliberately incompatible, to
+  show the 422).
+
+- **`allow_magic_operator`** — lets a step no catalogued AP covers be filled by a
+  generic LLM-backed *magic operator*, instead of failing with a **404**.
+  `ap-management` writes the `instruction` that operator runs with and returns it as a
+  suggested parameter. It is off by default, so the KO presets still fail as designed;
+  tick the box and re-run to watch the gap get filled.
+
+  > **Executing** a magic operator is a separate matter from planning one. The executor
+  > resolves it in Consul by slugifying its node name (`Magic Operator` →
+  > `magic-operator`), so a service under that name must be registered, declaring the
+  > same `instruction` + payload inputs. `MAGIC_OPERATOR_NAME` (passed through in
+  > `docker-compose.yml`) must match it. **Plan + Execute** warns before running a plan
+  > that contains one.
 
 The HTTP clients under `generated/` are auto-generated with
 [Kiota](https://github.com/microsoft/kiota) from each service's OpenAPI spec.
