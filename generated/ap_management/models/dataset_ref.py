@@ -7,7 +7,7 @@ from typing import Any, Optional, TYPE_CHECKING, Union
 @dataclass
 class DatasetRef(AdditionalDataHolder, Parsable):
     """
-    A dataset the plan was built against, trimmed for the API response.Deliberately narrower than `DatasetSummary`: the plan response must not carry thesummary's `access_urls` (which can hold DB connection strings) or table schemas.
+    A dataset the plan was built against. The AP itself holds no dataset nodes -- itonly has to be compatible with these.
     """
     # Stores additional data not described in the OpenAPI description found when deserializing. Can be used for serialization as well.
     additional_data: dict[str, Any] = field(default_factory=dict)

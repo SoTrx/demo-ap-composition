@@ -1,0 +1,575 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Analytical Pattern Management API",
+    "description": "API to manage AP",
+    "version": "0.4.5"
+  },
+  "paths": {
+    "/": {
+      "get": {
+        "summary": "Index",
+        "operationId": "index__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/health": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Health check",
+        "description": "Return the current liveness status of the service.",
+        "operationId": "health_check_api_v1_health_get",
+        "responses": {
+          "200": {
+            "description": "Service is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Health Check Api V1 Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/aps/compose": {
+      "post": {
+        "tags": [
+          "analytical patterns"
+        ],
+        "summary": "Compose Aps",
+        "description": "Create a new AnalyticalPattern in the MoMa graph repository.\nd\n    The ``input`` edges of the AP **must** reference Data nodes that belong\n    to an existing dataset, and the caller must be able to **browse** those\n    datasets.  The AP cannot create Dataset nodes itself.",
+        "operationId": "compose_aps_api_v1_aps_compose_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ComposePayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Composed AnalyticalPattern returned successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticalPattern",
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response 200 Compose Aps Api V1 Aps Compose Post"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or composition is not possible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected internal error during composition",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/aps/plan": {
+      "post": {
+        "tags": [
+          "analytical patterns"
+        ],
+        "summary": "Plan Ap",
+        "operationId": "plan_ap_api_v1_aps_plan_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanPayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Planned AnalyticalPattern returned successfully, together with the instantiation parameters required to run each of its operators",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanResult",
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response 200 Plan Ap Api V1 Aps Plan Post"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No AP found for the task, or an unknown dataset ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "APs found but cannot be composed, or no requested dataset is compatible with the planned AP",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Upstream service failure (LLM or MOMA)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected internal error during planning",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AnalyticalPattern": {
+        "properties": {
+          "nodes": {
+            "items": {
+              "$ref": "#/components/schemas/Node"
+            },
+            "type": "array",
+            "title": "Nodes"
+          },
+          "edges": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Edge"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Edges"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nodes"
+        ],
+        "title": "AnalyticalPattern"
+      },
+      "ComposePayload": {
+        "properties": {
+          "ap1": {
+            "$ref": "#/components/schemas/AnalyticalPattern"
+          },
+          "ap2": {
+            "$ref": "#/components/schemas/AnalyticalPattern"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ap1",
+          "ap2"
+        ],
+        "title": "ComposePayload"
+      },
+      "DatasetRef": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "kinds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Kinds",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "DatasetRef",
+        "description": "A dataset the plan was built against. The AP itself holds no dataset nodes -- it\nonly has to be compatible with these."
+      },
+      "Edge": {
+        "properties": {
+          "from": {
+            "type": "string",
+            "format": "uuid",
+            "title": "From"
+          },
+          "to": {
+            "type": "string",
+            "format": "uuid",
+            "title": "To"
+          },
+          "labels": {
+            "items": {
+              "$ref": "#/components/schemas/EdgeLabel"
+            },
+            "type": "array",
+            "title": "Labels"
+          },
+          "properties": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Properties"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "from",
+          "to",
+          "labels"
+        ],
+        "title": "Edge"
+      },
+      "EdgeLabel": {
+        "type": "string",
+        "enum": [
+          "distribution",
+          "recordSet",
+          "linkTo",
+          "containedIn",
+          "field",
+          "source/fileObject",
+          "source/fileSet",
+          "statistics",
+          "intervalStatistics",
+          "consist_of",
+          "input",
+          "output",
+          "follows",
+          "uses",
+          "is_accomplished_by",
+          "perform_inference",
+          "is_measured_by",
+          "fitted_on",
+          "trained_on",
+          "VIRTUAL_BELONGS_TO"
+        ],
+        "title": "EdgeLabel"
+      },
+      "ErrorResponse": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail"
+        ],
+        "title": "ErrorResponse"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "Node": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "labels": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Labels"
+          },
+          "properties": {
+            "patternProperties": {
+              "^[a-z@][a-zA-Z0-9_]*$": {}
+            },
+            "type": "object",
+            "title": "Properties"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "labels",
+          "properties"
+        ],
+        "title": "Node"
+      },
+      "PlanPayload": {
+        "properties": {
+          "task": {
+            "type": "string",
+            "title": "Task",
+            "description": "The natural-language task to plan an AP for."
+          },
+          "dataset_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Dataset Ids",
+            "description": "IDs of the datasets the plan must run against, as returned by cross-dataset-discovery. Their types constrain which operators can apply and ground the suggested instantiation parameters. The planned AP contains no dataset nodes; it is only guaranteed to be compatible with them.",
+            "default": []
+          },
+          "allow_magic_operator": {
+            "type": "boolean",
+            "title": "Allow Magic Operator",
+            "description": "Allow steps no catalogued AP covers to be filled by a generic LLM-backed 'magic' operator, instead of failing with 404. Off by default.",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "task"
+        ],
+        "title": "PlanPayload"
+      },
+      "PlanResult": {
+        "properties": {
+          "ap": {
+            "$ref": "#/components/schemas/AnalyticalPattern"
+          },
+          "instantiation_parameters": {
+            "items": {
+              "$ref": "#/components/schemas/SuggestedParameter"
+            },
+            "type": "array",
+            "title": "Instantiation Parameters"
+          },
+          "datasets": {
+            "items": {
+              "$ref": "#/components/schemas/DatasetRef"
+            },
+            "type": "array",
+            "title": "Datasets",
+            "default": []
+          },
+          "used_magic_operator": {
+            "type": "boolean",
+            "title": "Used Magic Operator",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "ap",
+          "instantiation_parameters"
+        ],
+        "title": "PlanResult",
+        "description": "The AP produced by the planner, plus the parameters needed to instantiate it."
+      },
+      "Properties": {
+        "properties": {
+          "mapping": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mapping"
+          }
+        },
+        "type": "object",
+        "title": "Properties"
+      },
+      "SuggestedParameter": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "required": {
+            "type": "boolean",
+            "title": "Required",
+            "default": true
+          },
+          "default": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default"
+          },
+          "suggested_value": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suggested Value"
+          },
+          "operator_id": {
+            "type": "string",
+            "title": "Operator Id",
+            "default": ""
+          },
+          "operator_name": {
+            "type": "string",
+            "title": "Operator Name",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "type"
+        ],
+        "title": "SuggestedParameter",
+        "description": "An instantiation parameter, with a value suggested from the task text."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}

@@ -1,0 +1,491 @@
+{
+  "edges": [
+    {
+      "from": "07ae5e25-1b29-4a8c-96c5-cb6647b62b24",
+      "labels": [
+        "containedIn"
+      ],
+      "properties": {},
+      "to": "b1eef6e4-a3a4-4721-ba86-5f99ed52e2c4"
+    },
+    {
+      "from": "11890253-bc36-4a23-8e3a-d81b83177f84",
+      "labels": [
+        "containedIn"
+      ],
+      "properties": {},
+      "to": "b1eef6e4-a3a4-4721-ba86-5f99ed52e2c4"
+    },
+    {
+      "from": "33b16952-565a-4993-b269-c2d28f319eed",
+      "labels": [
+        "containedIn"
+      ],
+      "properties": {},
+      "to": "b1eef6e4-a3a4-4721-ba86-5f99ed52e2c4"
+    },
+    {
+      "from": "352cd578-c5fb-45d7-8686-ff6a1bfc11c8",
+      "labels": [
+        "containedIn"
+      ],
+      "properties": {},
+      "to": "b1eef6e4-a3a4-4721-ba86-5f99ed52e2c4"
+    },
+    {
+      "from": "5230b9d9-604e-408c-89f5-adc350b98183",
+      "labels": [
+        "containedIn"
+      ],
+      "properties": {},
+      "to": "b1eef6e4-a3a4-4721-ba86-5f99ed52e2c4"
+    },
+    {
+      "from": "624ddb7d-6601-4066-8fdd-a4627838e40e",
+      "labels": [
+        "containedIn"
+      ],
+      "properties": {},
+      "to": "b1eef6e4-a3a4-4721-ba86-5f99ed52e2c4"
+    },
+    {
+      "from": "7c4d20a0-33e8-471e-8a3f-a7a54aa09f68",
+      "labels": [
+        "distribution"
+      ],
+      "properties": {},
+      "to": "07ae5e25-1b29-4a8c-96c5-cb6647b62b24"
+    },
+    {
+      "from": "7c4d20a0-33e8-471e-8a3f-a7a54aa09f68",
+      "labels": [
+        "distribution"
+      ],
+      "properties": {},
+      "to": "11890253-bc36-4a23-8e3a-d81b83177f84"
+    },
+    {
+      "from": "7c4d20a0-33e8-471e-8a3f-a7a54aa09f68",
+      "labels": [
+        "distribution"
+      ],
+      "properties": {},
+      "to": "33b16952-565a-4993-b269-c2d28f319eed"
+    },
+    {
+      "from": "7c4d20a0-33e8-471e-8a3f-a7a54aa09f68",
+      "labels": [
+        "distribution"
+      ],
+      "properties": {},
+      "to": "352cd578-c5fb-45d7-8686-ff6a1bfc11c8"
+    },
+    {
+      "from": "7c4d20a0-33e8-471e-8a3f-a7a54aa09f68",
+      "labels": [
+        "distribution"
+      ],
+      "properties": {},
+      "to": "5230b9d9-604e-408c-89f5-adc350b98183"
+    },
+    {
+      "from": "7c4d20a0-33e8-471e-8a3f-a7a54aa09f68",
+      "labels": [
+        "distribution"
+      ],
+      "properties": {},
+      "to": "624ddb7d-6601-4066-8fdd-a4627838e40e"
+    },
+    {
+      "from": "7c4d20a0-33e8-471e-8a3f-a7a54aa09f68",
+      "labels": [
+        "distribution"
+      ],
+      "properties": {},
+      "to": "82c1a1b1-f43a-498a-ace9-36dcb8342569"
+    },
+    {
+      "from": "7c4d20a0-33e8-471e-8a3f-a7a54aa09f68",
+      "labels": [
+        "distribution"
+      ],
+      "properties": {},
+      "to": "9bd99e2b-97b4-4fb3-858a-6229df4df73f"
+    },
+    {
+      "from": "7c4d20a0-33e8-471e-8a3f-a7a54aa09f68",
+      "labels": [
+        "distribution"
+      ],
+      "properties": {},
+      "to": "a234fec9-5a58-46b1-83db-1d7940d9123a"
+    },
+    {
+      "from": "7c4d20a0-33e8-471e-8a3f-a7a54aa09f68",
+      "labels": [
+        "distribution"
+      ],
+      "properties": {},
+      "to": "b1eef6e4-a3a4-4721-ba86-5f99ed52e2c4"
+    },
+    {
+      "from": "7c4d20a0-33e8-471e-8a3f-a7a54aa09f68",
+      "labels": [
+        "distribution"
+      ],
+      "properties": {},
+      "to": "be4a14bf-6380-4cb7-9af6-b1bce12fcbde"
+    },
+    {
+      "from": "7c4d20a0-33e8-471e-8a3f-a7a54aa09f68",
+      "labels": [
+        "distribution"
+      ],
+      "properties": {},
+      "to": "d138d22b-0eba-45e5-bc50-9cb633d226f8"
+    },
+    {
+      "from": "7c4d20a0-33e8-471e-8a3f-a7a54aa09f68",
+      "labels": [
+        "distribution"
+      ],
+      "properties": {},
+      "to": "e3c3d32b-8043-4081-94b7-21745b51fb82"
+    },
+    {
+      "from": "7c4d20a0-33e8-471e-8a3f-a7a54aa09f68",
+      "labels": [
+        "distribution"
+      ],
+      "properties": {},
+      "to": "edb56ed2-a266-48a7-b811-b18d63dbf4fb"
+    },
+    {
+      "from": "82c1a1b1-f43a-498a-ace9-36dcb8342569",
+      "labels": [
+        "containedIn"
+      ],
+      "properties": {},
+      "to": "b1eef6e4-a3a4-4721-ba86-5f99ed52e2c4"
+    },
+    {
+      "from": "9bd99e2b-97b4-4fb3-858a-6229df4df73f",
+      "labels": [
+        "containedIn"
+      ],
+      "properties": {},
+      "to": "b1eef6e4-a3a4-4721-ba86-5f99ed52e2c4"
+    },
+    {
+      "from": "a234fec9-5a58-46b1-83db-1d7940d9123a",
+      "labels": [
+        "containedIn"
+      ],
+      "properties": {},
+      "to": "b1eef6e4-a3a4-4721-ba86-5f99ed52e2c4"
+    },
+    {
+      "from": "be4a14bf-6380-4cb7-9af6-b1bce12fcbde",
+      "labels": [
+        "containedIn"
+      ],
+      "properties": {},
+      "to": "b1eef6e4-a3a4-4721-ba86-5f99ed52e2c4"
+    },
+    {
+      "from": "d138d22b-0eba-45e5-bc50-9cb633d226f8",
+      "labels": [
+        "containedIn"
+      ],
+      "properties": {},
+      "to": "b1eef6e4-a3a4-4721-ba86-5f99ed52e2c4"
+    },
+    {
+      "from": "e3c3d32b-8043-4081-94b7-21745b51fb82",
+      "labels": [
+        "containedIn"
+      ],
+      "properties": {},
+      "to": "b1eef6e4-a3a4-4721-ba86-5f99ed52e2c4"
+    },
+    {
+      "from": "edb56ed2-a266-48a7-b811-b18d63dbf4fb",
+      "labels": [
+        "containedIn"
+      ],
+      "properties": {},
+      "to": "b1eef6e4-a3a4-4721-ba86-5f99ed52e2c4"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "07ae5e25-1b29-4a8c-96c5-cb6647b62b24",
+      "labels": [
+        "Table",
+        "Data",
+        "cr:FileObject"
+      ],
+      "properties": {
+        "contentSize": "",
+        "contentUrl": "",
+        "description": "",
+        "encodingFormat": "text/sql",
+        "name": "test_kurt",
+        "sha256": "",
+        "type": "cr:FileObject"
+      }
+    },
+    {
+      "id": "11890253-bc36-4a23-8e3a-d81b83177f84",
+      "labels": [
+        "Table",
+        "Data",
+        "cr:FileObject"
+      ],
+      "properties": {
+        "contentSize": "",
+        "contentUrl": "",
+        "description": "",
+        "encodingFormat": "text/sql",
+        "name": "meteo_tmin",
+        "sha256": "",
+        "type": "cr:FileObject"
+      }
+    },
+    {
+      "id": "33b16952-565a-4993-b269-c2d28f319eed",
+      "labels": [
+        "Table",
+        "Data",
+        "cr:FileObject"
+      ],
+      "properties": {
+        "contentSize": "",
+        "contentUrl": "",
+        "description": "",
+        "encodingFormat": "text/sql",
+        "name": "meteo_ssrd",
+        "sha256": "",
+        "type": "cr:FileObject"
+      }
+    },
+    {
+      "id": "352cd578-c5fb-45d7-8686-ff6a1bfc11c8",
+      "labels": [
+        "Table",
+        "Data",
+        "cr:FileObject"
+      ],
+      "properties": {
+        "contentSize": "",
+        "contentUrl": "",
+        "description": "",
+        "encodingFormat": "text/sql",
+        "name": "meteo_tp",
+        "sha256": "",
+        "type": "cr:FileObject"
+      }
+    },
+    {
+      "id": "5230b9d9-604e-408c-89f5-adc350b98183",
+      "labels": [
+        "Table",
+        "Data",
+        "cr:FileObject"
+      ],
+      "properties": {
+        "contentSize": "",
+        "contentUrl": "",
+        "description": "",
+        "encodingFormat": "text/sql",
+        "name": "temp_2020_highest_point",
+        "sha256": "",
+        "type": "cr:FileObject"
+      }
+    },
+    {
+      "id": "624ddb7d-6601-4066-8fdd-a4627838e40e",
+      "labels": [
+        "Table",
+        "Data",
+        "cr:FileObject"
+      ],
+      "properties": {
+        "contentSize": "",
+        "contentUrl": "",
+        "description": "",
+        "encodingFormat": "text/sql",
+        "name": "elevation_short",
+        "sha256": "",
+        "type": "cr:FileObject"
+      }
+    },
+    {
+      "id": "7c4d20a0-33e8-471e-8a3f-a7a54aa09f68",
+      "labels": [
+        "sc:Dataset"
+      ],
+      "properties": {
+        "citeAs": "",
+        "conformsTo": "",
+        "country": "GR",
+        "datePublished": "24-05-2025",
+        "description": "A global atmospheric reanalysis dataset produced by the European Centre for Medium\u2010Range Weather Forecast\u2019s (ECMWF) and has data available from 1950, providing a consistent view of the evolution of land variables. It has an enhanced resolution of 0.1\u00b0 x 0.1\u00b0, while the temporal frequency of the model output is hourly.",
+        "access": "",
+        "doi": "",
+        "fieldOfScience": [
+          "EARTH AND RELATED ENVIRONMENTAL SCIENCES"
+        ],
+        "headline": "Meteorological data time series by ECWMF",
+        "keywords": [
+          "weather",
+          "weather prediction"
+        ],
+        "status": "loaded",
+        "uploadedBy": "ADMIN",
+        "inLanguage": [
+          "el"
+        ],
+        "license": "https://cds.climate.copernicus.eu/datasets/reanalysis-era5-land?tab=download",
+        "name": "Era5land",
+        "archivedAt": "s3:/7c4d20a0-33e8-471e-8a3f-a7a54aa09f68",
+        "type": "sc:Dataset",
+        "url": "https://cds.climate.copernicus.eu/datasets/reanalysis-era5-land?tab=download",
+        "version": ""
+      }
+    },
+    {
+      "id": "82c1a1b1-f43a-498a-ace9-36dcb8342569",
+      "labels": [
+        "Table",
+        "Data",
+        "cr:FileObject"
+      ],
+      "properties": {
+        "contentSize": "",
+        "contentUrl": "",
+        "description": "",
+        "encodingFormat": "text/sql",
+        "name": "coordinates_of_highest_point",
+        "sha256": "",
+        "type": "cr:FileObject"
+      }
+    },
+    {
+      "id": "9bd99e2b-97b4-4fb3-858a-6229df4df73f",
+      "labels": [
+        "Table",
+        "Data",
+        "cr:FileObject"
+      ],
+      "properties": {
+        "contentSize": "",
+        "contentUrl": "",
+        "description": "",
+        "encodingFormat": "text/sql",
+        "name": "meteo_tmean",
+        "sha256": "",
+        "type": "cr:FileObject"
+      }
+    },
+    {
+      "id": "a234fec9-5a58-46b1-83db-1d7940d9123a",
+      "labels": [
+        "Table",
+        "Data",
+        "cr:FileObject"
+      ],
+      "properties": {
+        "contentSize": "",
+        "contentUrl": "",
+        "description": "",
+        "encodingFormat": "text/sql",
+        "name": "meteo_elevation",
+        "sha256": "",
+        "type": "cr:FileObject"
+      }
+    },
+    {
+      "id": "b1eef6e4-a3a4-4721-ba86-5f99ed52e2c4",
+      "labels": [
+        "RelationalDatabase",
+        "Data",
+        "dg:DatabaseConnection"
+      ],
+      "properties": {
+        "description": "",
+        "encodingFormat": "text/sql",
+        "name": "ds_era5_land",
+        "type": "dg:DatabaseConnection"
+      }
+    },
+    {
+      "id": "be4a14bf-6380-4cb7-9af6-b1bce12fcbde",
+      "labels": [
+        "Table",
+        "Data",
+        "cr:FileObject"
+      ],
+      "properties": {
+        "contentSize": "",
+        "contentUrl": "",
+        "description": "",
+        "encodingFormat": "text/sql",
+        "name": "meteo_tmax",
+        "sha256": "",
+        "type": "cr:FileObject"
+      }
+    },
+    {
+      "id": "d138d22b-0eba-45e5-bc50-9cb633d226f8",
+      "labels": [
+        "Table",
+        "Data",
+        "cr:FileObject"
+      ],
+      "properties": {
+        "contentSize": "",
+        "contentUrl": "",
+        "description": "",
+        "encodingFormat": "text/sql",
+        "name": "landcover",
+        "sha256": "",
+        "type": "cr:FileObject"
+      }
+    },
+    {
+      "id": "e3c3d32b-8043-4081-94b7-21745b51fb82",
+      "labels": [
+        "Table",
+        "Data",
+        "cr:FileObject"
+      ],
+      "properties": {
+        "contentSize": "",
+        "contentUrl": "",
+        "description": "",
+        "encodingFormat": "text/sql",
+        "name": "meteo_sdmax",
+        "sha256": "",
+        "type": "cr:FileObject"
+      }
+    },
+    {
+      "id": "edb56ed2-a266-48a7-b811-b18d63dbf4fb",
+      "labels": [
+        "Table",
+        "Data",
+        "cr:FileObject"
+      ],
+      "properties": {
+        "contentSize": "",
+        "contentUrl": "",
+        "description": "",
+        "encodingFormat": "text/sql",
+        "name": "meteo_windspeedmax",
+        "sha256": "",
+        "type": "cr:FileObject"
+      }
+    }
+  ]
+}

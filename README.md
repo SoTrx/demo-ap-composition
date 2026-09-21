@@ -5,13 +5,12 @@ A Streamlit app for exploring **Analytical Patterns (APs)** across four stages:
 | Tab | What it does | Service |
 |-----|--------------|---------|
 | **⚡ Compose** | Wire two APs together into one combined pattern | `ap-management` `POST /api/v1/aps/compose` |
-| **📋 Plan** | Turn a natural-language task — optionally grounded on **datasets** — into a wired AP + suggested instantiation parameters | `ap-management` `POST /api/v1/aps/plan` |
+| **📋 Plan** | Turn a natural-language task — optionally constrained to a set of datasets, optionally allowing the magic operator — into a wired AP + suggested instantiation parameters | `ap-management` `POST /api/v1/aps/plan` |
 | **▶️ Execute** | Run an AP *instance* (`{ap, state}`) — from a preset or pasted/edited by hand — and show per-operator results on the graph | `ap-executor` `POST …/aps/execute` |
 | **📋▶️ Plan + Execute** | Plan a task, seed `state` from its suggested parameters, and execute the result in one step | `ap-management` `/plan` → `ap-executor` `…/aps/execute` |
 
 Every AP is rendered as a Graphviz graph; in the Execute tabs, operator nodes are
-recoloured by execution status, and a ✨ plum node is a **magic operator** the planner
-generated (see below).
+recoloured by execution status.
 
 The **Execute** and **Plan + Execute** tabs are disabled unless
 `AP_EXECUTOR_EXECUTE_URL` points at a reachable executor (see below).
@@ -38,11 +37,36 @@ graph TD
 
     User --> Streamlit
     Streamlit -->|"compose / plan"| APMgmt
-    Streamlit -->|"list / seed datasets"| Moma
     APMgmt -->|"Bolt"| Neo4j
-    APMgmt -->|"APs + datasets"| Moma
+    APMgmt --> Moma
     Streamlit -.->|"execute (when AP_EXECUTOR_EXECUTE_URL is set)"| APExec
 ```
+
+**Plan — datasets and the magic operator** (ap-management ≥ v1.9.0):
+
+- **Datasets.** The Plan and Plan + Execute tabs offer every dataset descriptor in
+  `assets/datasets/` (PG-JSON, seeded into moma-management at startup under its
+  `sc:Dataset` root id). The picked ones are sent as `dataset_ids`. The planner
+  derives each dataset's *kinds* from its node labels and only keeps APs whose
+  operators can run on them — e.g. SQL operators need a `RelationalDatabase` /
+  `Table` / `CSV`, so a SQL task over the PDF corpus fails with `422`. The shipped
+  datasets cover a relational database (*Era5land*), an Excel file (*ISCO
+  taxonomy*) and a PDF corpus (*Climate Policy Report Corpus*). In production,
+  picking datasets is [cross-dataset-discovery](https://github.com/datagems-eosc/cross-dataset-discovery)'s job.
+- **Magic operator.** The *Allow magic operator* toggle sends
+  `allow_magic_operator: true`: a step no catalogued AP covers — or the whole task —
+  becomes a generic LLM-backed `Magic_Operator` (purple in the graph), whose
+  generated `instruction` is returned as an instantiation parameter.
+
+**Known limitations** (upstream, not in this demo):
+
+- A planned AP is only *type*-compatible with its datasets: it holds no dataset
+  nodes, and the dataset descriptors carry no credentials, so connection
+  parameters (e.g. Text-to-SQL's `parameters.db_info`) can't be suggested.
+  Plan + Execute therefore can't run a dataset-backed plan end to end.
+- Magic-operator plans don't execute yet: the planner names the payload input
+  dynamically, whereas the deployed magic operator only accepts the inputs its
+  config declares, and ap-executor drops undeclared inputs.
 
 **Execute:**
 
@@ -54,37 +78,6 @@ notice, until `AP_EXECUTOR_EXECUTE_URL` is set to a reachable executor (see
 below). `Execute` runs the instance you load/paste as-is; `Plan + Execute` first
 calls `/plan`, seeds `state` from the returned suggested parameters, and executes
 the result.
-
-**Datasets and the magic operator:**
-
-`POST /aps/plan` takes two optional inputs beyond the task, both surfaced in the
-**Plan** and **Plan + Execute** tabs:
-
-- **`dataset_ids`** — datasets, held by `moma-management`, that the plan must run
-  against. Their *kinds* constrain which operators may apply (a SQL operator needs a
-  `RelationalDatabase`/`Table`/`CsvSet`, an OCR operator a `PdfSet`…) and their tables
-  and columns ground the suggested parameter values. If none of the chosen datasets is
-  compatible with the planned AP, `ap-management` rejects the plan with a **422** up
-  front rather than letting the executor fail later. The planned AP itself contains no
-  dataset nodes — it is only guaranteed to be *compatible* with them.
-
-  Two demo datasets in `assets/datasets/` are seeded into `moma-management` at startup:
-  *University Enrolment Database* (`RelationalDatabase`, `Table` — works with the SQL
-  patterns) and *Climate Policy Report Corpus* (`PdfSet` — deliberately incompatible, to
-  show the 422).
-
-- **`allow_magic_operator`** — lets a step no catalogued AP covers be filled by a
-  generic LLM-backed *magic operator*, instead of failing with a **404**.
-  `ap-management` writes the `instruction` that operator runs with and returns it as a
-  suggested parameter. It is off by default, so the KO presets still fail as designed;
-  tick the box and re-run to watch the gap get filled.
-
-  > **Executing** a magic operator is a separate matter from planning one. The executor
-  > resolves it in Consul by slugifying its node name (`Magic Operator` →
-  > `magic-operator`), so a service under that name must be registered, declaring the
-  > same `instruction` + payload inputs. `MAGIC_OPERATOR_NAME` (passed through in
-  > `docker-compose.yml`) must match it. **Plan + Execute** warns before running a plan
-  > that contains one.
 
 The HTTP clients under `generated/` are auto-generated with
 [Kiota](https://github.com/microsoft/kiota) from each service's OpenAPI spec.
@@ -144,12 +137,14 @@ natural-language task.
 make clients
 ```
 
-- `ap-management` / `moma-management` clients are generated from the live
-  services' `/openapi.json` (needs the base stack up).
-- The `ap-executor` client is generated from the vendored spec
-  `openapi/ap_executor.json`, so it works offline. Refresh that spec from a
-  running executor with:
+- The `moma-management` client is generated from the live service's
+  `/openapi.json` (needs the base stack up).
+- The `ap-management` and `ap-executor` clients are generated from the vendored
+  specs `openapi/ap_management.json` (ap-management v1.9.0) and
+  `openapi/ap_executor.json`, so they don't depend on which image is running.
+  Refresh them from running services with:
 
   ```sh
+  curl -s http://ap-management:5000/openapi.json > openapi/ap_management.json
   curl -s http://ap-executor:5000/openapi.json > openapi/ap_executor.json
   ```

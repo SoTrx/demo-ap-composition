@@ -1,0 +1,97 @@
+{
+  "edges": [
+    {
+      "from": "b51c7359-88bf-48b7-8a3f-561d36e81f74",
+      "labels": [
+        "containedIn"
+      ],
+      "properties": {},
+      "to": "f74004e0-f4c2-41c0-9422-60e6336138dd"
+    },
+    {
+      "from": "42f492f7-d706-4153-a3f8-f8eac695d3ec",
+      "labels": [
+        "distribution"
+      ],
+      "properties": {},
+      "to": "b51c7359-88bf-48b7-8a3f-561d36e81f74"
+    },
+    {
+      "from": "42f492f7-d706-4153-a3f8-f8eac695d3ec",
+      "labels": [
+        "distribution"
+      ],
+      "properties": {},
+      "to": "f74004e0-f4c2-41c0-9422-60e6336138dd"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "b51c7359-88bf-48b7-8a3f-561d36e81f74",
+      "labels": [
+        "Sheet",
+        "Data",
+        "cr:FileObject"
+      ],
+      "properties": {
+        "description": "",
+        "encodingFormat": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "name": "Sheet1",
+        "type": "cr:FileObject"
+      }
+    },
+    {
+      "id": "f74004e0-f4c2-41c0-9422-60e6336138dd",
+      "labels": [
+        "EXCEL",
+        "Data",
+        "cr:FileObject"
+      ],
+      "properties": {
+        "contentSize": "231927 B",
+        "contentUrl": "s3:/ISCO-08 EN Structure and definitions.xlsx",
+        "description": "",
+        "encodingFormat": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "name": "ISCO-08 EN Structure and definitions.xlsx",
+        "sha256": "5b932891f8d65afe4ff982f2e8b1312d3699ae5497b7069ce7c9ee8b4c97f3cb",
+        "type": "cr:FileObject"
+      }
+    },
+    {
+      "id": "42f492f7-d706-4153-a3f8-f8eac695d3ec",
+      "labels": [
+        "sc:Dataset"
+      ],
+      "properties": {
+        "citeAs": "",
+        "conformsTo": "",
+        "country": "",
+        "datePublished": "2025-09-10",
+        "description": "The ISCO taxonomy is the International Standard Classification of Occupations, a globally used system developed by the International Labour Organization (ILO) to organize and classify jobs based on their required tasks, duties, skill levels, and skill specializations. The current version, ISCO-08, is a four-level hierarchical structure with 10 Major Groups, 43 Sub-Major Groups, 130 Minor Groups, and 436 Unit Groups (the most detailed level), which facilitates international communication, comparative occupational statistics, and labor market analysis.",
+        "access": "",
+        "doi": "",
+        "fieldOfScience": [
+          "ECONOMICS AND BUSINESS"
+        ],
+        "headline": "the International Standard Classification of Occupations, a globally used system developed by the International Labour Organization (ILO).",
+        "keywords": [
+          "taxonomy",
+          "occupations",
+          "job classification",
+          "occupation classification"
+        ],
+        "status": "loaded",
+        "uploadedBy": "ADMIN",
+        "inLanguage": [
+          "en"
+        ],
+        "license": "CC-BY 4.0 ",
+        "name": "ISCO taxonomy",
+        "archivedAt": "s3:/temp_id_since_profiler_does_not_issue_ids",
+        "type": "sc:Dataset",
+        "url": "https://www.cedefop.europa.eu/en/projects/skills-forecast",
+        "version": ""
+      }
+    }
+  ]
+}

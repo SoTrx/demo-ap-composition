@@ -22,12 +22,7 @@ from generated.ap_management.models.analytical_pattern import AnalyticalPattern
 from generated.ap_management.models.compose_payload import ComposePayload
 from generated.ap_management.models.plan_payload import PlanPayload
 from generated.ap_management.models.suggested_parameter import SuggestedParameter
-from utils import (
-    DATASET_ROOT_LABEL,
-    list_ap_files,
-    list_dataset_files,
-    load_ap_json,
-)
+from utils import list_ap_files, list_dataset_files, load_ap_json
 
 AP_MANAGEMENT_SERVICE_URL = getenv(
     "AP_MANAGEMENT_SERVICE_URL", "http://ap-management:5000")
@@ -92,20 +87,12 @@ async def compose_aps(ap1_data: dict, ap2_data: dict) -> dict:
 
 
 def _suggested_parameters_to_list(params: list[SuggestedParameter] | None) -> list[dict]:
-    """``operator_id`` / ``operator_name`` are spelled out rather than left to the
-    ``additional_data`` spread: they are typed properties on the model, so they never
-    land in ``additional_data``. ``operator_id`` is what keys the executor's ``state``
-    (see ``main._seed_state_from_params``) — a parameter's ``name`` alone is ambiguous
-    as soon as an AP has more than one operator declaring an input of that name."""
+    # ``default`` / ``suggested_value`` are untyped (``anyOf``) in the spec, so Kiota
+    # leaves them in ``additional_data``.
     return [
-        {
-            "name": p.name,
-            "type": p.type,
-            "required": p.required,
-            "operator_id": p.operator_id,
-            "operator_name": p.operator_name,
-            **(p.additional_data or {}),
-        }
+        {"name": p.name, "type": p.type, "required": p.required,
+         "operator_id": p.operator_id, "operator_name": p.operator_name,
+         **(p.additional_data or {})}
         for p in (params or [])
     ]
 
@@ -115,21 +102,8 @@ async def plan_ap(
     dataset_ids: list[str] | None = None,
     allow_magic_operator: bool = False,
 ) -> dict:
-    """Plan an AP for *task*.
-
-    ``dataset_ids`` grounds the plan on datasets held by moma-management: their kinds
-    constrain which operators may apply (a SQL operator needs a relational/tabular
-    dataset) and their table/column names ground the suggested parameter values. When
-    none of them is compatible with the planned AP, ap-management fails the request with
-    a 422 rather than letting the executor fail later.
-
-    ``allow_magic_operator`` lets a step no catalogued AP covers be filled by a generic
-    LLM-backed "magic" operator instead of failing with a 404.
-
-    Returns ``{"ap", "instantiation_parameters", "datasets", "used_magic_operator"}`` —
-    the AP stays nested under ``ap`` so it can be handed to the executor (or the graph
-    renderer) without having to strip the plan metadata off it.
-    """
+    """Call ``/plan``. Returns ``{"ap", "instantiation_parameters", "datasets",
+    "used_magic_operator"}`` as plain JSON-shaped values."""
     client = ApManagementClient(_create_adapter(AP_MANAGEMENT_SERVICE_URL))
     payload = PlanPayload(
         task=task,
@@ -220,8 +194,28 @@ async def execute_ap(ap_data: dict, state: dict) -> dict:
     raise TimeoutError("ap-executor execution did not finish in time")
 
 
+async def _seed_if_missing(
+    client: httpx.AsyncClient, collection: str, item_id: str, data: dict
+) -> None:
+    """``GET {moma}/api/v1/{collection}/{item_id}`` and, only on 404, POST ``data``
+    to ``{moma}/api/v1/{collection}/``."""
+    base = f"{MOMA_MANAGEMENT_SERVICE_URL.rstrip('/')}/api/v1/{collection}"
+    resp = await client.get(f"{base}/{item_id}")
+    if resp.status_code != 404:
+        if resp.status_code != 200:
+            _log.warning("moma GET /%s/%s returned %s",
+                         collection, item_id, resp.status_code)
+        return
+    body = {k: v for k, v in data.items() if k != "$schema"}
+    resp = await client.post(f"{base}/", json=body)
+    if resp.is_error:
+        _log.error("Failed to seed %s %s into moma-management: %s %s",
+                   collection, item_id, resp.status_code, resp.text)
+    else:
+        _log.info("Seeded %s %s into moma-management", collection, item_id)
+
+
 async def seed_aps_to_moma() -> None:
-    base = MOMA_MANAGEMENT_SERVICE_URL.rstrip("/")
     async with httpx.AsyncClient() as client:
         for _, path, _ in list_ap_files():
             if path.split("/")[-1][:2] not in ("01", "02", "08"):
@@ -232,94 +226,13 @@ async def seed_aps_to_moma() -> None:
                  if "Analytical_Pattern" in n.get("labels", [])),
                 None,
             )
-            if not ap_id:
-                continue
-            resp = await client.get(f"{base}/api/v1/aps/{ap_id}")
-            if resp.status_code != 404:
-                if resp.status_code != 200:
-                    _log.warning("moma GET /aps/%s returned %s",
-                                 ap_id, resp.status_code)
-                continue
-            body = {k: v for k, v in data.items() if k != "$schema"}
-            try:
-                resp = await client.post(f"{base}/api/v1/aps/", json=body)
-                resp.raise_for_status()
-                _log.info("Seeded AP %s into moma-management", ap_id)
-            except httpx.HTTPStatusError:
-                _log.exception("Failed to seed AP %s into moma-management: %s %s",
-                               ap_id, resp.status_code, resp.text)
+            if ap_id:
+                await _seed_if_missing(client, "aps", ap_id, data)
 
 
 async def seed_datasets_to_moma() -> None:
-    """Seed the demo datasets in ``assets/datasets/`` into moma-management.
-
-    The planner's ``dataset_ids`` are resolved through moma, so without these the
-    dataset picker in the Plan tabs would have nothing to offer on a fresh stack. Same
-    idempotency rule as :func:`seed_aps_to_moma`: only POST what is not already there.
-    """
-    base = MOMA_MANAGEMENT_SERVICE_URL.rstrip("/")
+    """The planner resolves ``dataset_ids`` through moma, so every dataset the demo
+    offers must exist there under its ``sc:Dataset`` root id."""
     async with httpx.AsyncClient() as client:
-        for path in list_dataset_files():
-            data = load_ap_json(path)
-            dataset_id = next(
-                (n["id"] for n in data.get("nodes", [])
-                 if DATASET_ROOT_LABEL in n.get("labels", [])),
-                None,
-            )
-            if not dataset_id:
-                continue
-            resp = await client.get(f"{base}/api/v1/datasets/{dataset_id}")
-            if resp.status_code != 404:
-                if resp.status_code != 200:
-                    _log.warning("moma GET /datasets/%s returned %s",
-                                 dataset_id, resp.status_code)
-                continue
-            body = {k: v for k, v in data.items() if k != "$schema"}
-            try:
-                resp = await client.post(f"{base}/api/v1/datasets/", json=body)
-                resp.raise_for_status()
-                _log.info("Seeded dataset %s into moma-management", dataset_id)
-            except httpx.HTTPStatusError:
-                _log.exception("Failed to seed dataset %s into moma-management: %s %s",
-                               dataset_id, resp.status_code, resp.text)
-
-
-async def list_datasets() -> list[dict]:
-    """``[{"id", "name", "kinds"}]`` for every dataset moma-management holds.
-
-    Plain httpx rather than the generated client: moma types this response as a bare
-    ``additionalProperties: true`` object, so Kiota hands back an untyped blob anyway.
-
-    moma returns each dataset as a whole PG-JSON graph, so the name comes off the
-    ``sc:Dataset`` root node and ``kinds`` is the set of the other nodes' labels — the
-    same projection ap-management makes internally to decide which operators can run
-    against a dataset (``RelationalDatabase``/``Table`` for SQL, ``PdfSet`` for PDF …).
-    """
-    base = MOMA_MANAGEMENT_SERVICE_URL.rstrip("/")
-    async with httpx.AsyncClient() as client:
-        try:
-            resp = await client.get(f"{base}/api/v1/datasets/",
-                                    params={"pageSize": 100})
-            resp.raise_for_status()
-        except httpx.HTTPError:
-            _log.exception("moma GET /datasets/ failed")
-            return []
-
-    datasets = []
-    for graph in (resp.json().get("datasets") or []):
-        nodes = graph.get("nodes") or []
-        root = next(
-            (n for n in nodes if DATASET_ROOT_LABEL in (n.get("labels") or [])), None)
-        if not root:
-            continue
-        datasets.append({
-            "id": str(root.get("id")),
-            "name": (root.get("properties") or {}).get("name") or str(root.get("id")),
-            "kinds": list(dict.fromkeys(
-                label
-                for node in nodes
-                for label in (node.get("labels") or [])
-                if label != DATASET_ROOT_LABEL
-            )),
-        })
-    return datasets
+        for ds in list_dataset_files():
+            await _seed_if_missing(client, "datasets", ds["id"], load_ap_json(ds["path"]))

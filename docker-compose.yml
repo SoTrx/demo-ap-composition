@@ -7,8 +7,8 @@ services:
     - traefik.http.routers.demo-composition.rule=PathPrefix(`/demo-composition`)
     - traefik.http.services.demo-composition.loadbalancer.server.port=8501
     - traefik.http.routers.demo-composition.entrypoints=web
-    ports:
-      - "8501:8501"
+    # ports:
+    #   - "8501:8501"
     environment:
       - AP_MANAGEMENT_SERVICE_URL=http://ap-management:5000
       # The Execute and Plan + Execute tabs are disabled unless AP_EXECUTOR_EXECUTE_URL
@@ -17,7 +17,7 @@ services:
       # AP_EXECUTOR_SERVICE_URL only sets the base URL for the stock /api/v1/aps/execute route.
       - AP_EXECUTOR_SERVICE_URL=${AP_EXECUTOR_SERVICE_URL:-http://ap-executor:5000}
       - AP_EXECUTOR_EXECUTE_URL=${AP_EXECUTOR_EXECUTE_URL:-}
-      - STREAMLIT_SERVER_BASE_URL_PATH=${APP_BASE_URL_PATH:-/}
+      - STREAMLIT_SERVER_BASE_URL_PATH=${APP_BASE_URL_PATH:-}
     restart: always
     healthcheck:
       test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:8501${APP_BASE_URL_PATH:-/}')\" || exit 1"]
@@ -50,8 +50,8 @@ services:
     image: ghcr.io/datagems-eosc/datagems-eosc/moma-management:v2.11.0
     labels:
       - traefik.enable=false
-    ports:
-      - "8510:5000"
+    # ports:
+    #   - "8510:5000"
     environment:
       - NEO4J_URI=bolt://neo4j:7687
       - NEO4J_USER=neo4j
@@ -74,14 +74,15 @@ services:
     labels:
       - traefik.enable=false
     environment:
-      - MOMA_MANAGEMENT_URL=http://moma-management:5000
+      # ap-management reads MOMA_MANAGEMENT_BASE_URL (MOMA_MANAGEMENT_URL is ignored).
+      - MOMA_MANAGEMENT_BASE_URL=http://moma-management:5000
       - LLM_API_BASE=${LLM_API_BASE}
       - LLM_API_KEY=${LLM_API_KEY}
-      - LLM_API_MODEL=openai/scayle_qwen3.8-flash-next
+      - LLM_API_MODEL=${LLM_API_MODEL}
       - LLM_SSL_VERIFY=false
-      # The planner emits this as the node name of a magic operator; the executor
-      # slugifies it into the Consul service name it resolves ("Magic Operator" ->
-      # "magic-operator"), so it must match the deployed operator's service name.
+      # Magic operator (only used when a plan request sets allow_magic_operator).
+      # The executor slugifies the name into the Consul service it resolves
+      # ("Magic Operator" -> "magic-operator"), so it must match the deployment.
       - MAGIC_OPERATOR_NAME=${MAGIC_OPERATOR_NAME:-Magic Operator}
       # Leave empty: pinning a version filters the Consul lookup on Service.Meta.version,
       # which consul-k8s Service Sync cannot set.
