@@ -1,0 +1,64 @@
+{
+    "$schema": "https://raw.githubusercontent.com/datagems-eosc/moma-management/refs/tags/v2.3.0/moma_management/domain/schema/moma.schema.json",
+    "nodes": [
+        {
+            "id": "aa100000-0000-4000-8000-000000000001",
+            "labels": [
+                "Analytical_Pattern"
+            ],
+            "properties": {
+                "name": "MathE Test Recommendation",
+                "description": "Recommends a set of MathE multiple-choice questions tailored to a student's level on a given topic.",
+                "process": "recommendation",
+                "publishedDate": "2026-09-28"
+            }
+        },
+        {
+            "id": "aa100000-0000-4000-8000-000000000002",
+            "labels": [
+                "Test_Recommendation_Operator",
+                "Operator"
+            ],
+            "properties": {
+                "name": "Test Recommendation",
+                "description": "Selects MathE multiple-choice questions (statement, answer options, index of the correct option), returned as JSON text, suited to a student's proficiency level on a MathE topic. Returns the questions only, without any explanation of the answers.",
+                "version": "1.0.0",
+                "step": 1,
+                "inputs": [
+                    {
+                        "name": "level",
+                        "type": "number",
+                        "description": "Student proficiency from 0.0 (beginner) to 1.0 (expert), e.g. a good student is about 0.75.",
+                        "required": true,
+                        "default": 0.5
+                    },
+                    {
+                        "name": "topic",
+                        "type": "string",
+                        "description": "MathE topic name, one of: Real Functions of a Single Variable, Differentiation, Integration, Fundamental Mathematics, Complex Numbers, Optimization, Statistics, Real Functions of Several Variables, Differential Equations, Probability, Linear Algebra, Graph Theory, Analytic Geometry, Numerical Methods, Discrete Mathematics.",
+                        "required": true,
+                        "default": ""
+                    }
+                ],
+                "outputs": [
+                    {
+                        "name": "questions",
+                        "type": "string",
+                        "description": "JSON-serialized list of multiple-choice questions, each {\"statement\": string, \"options\": [string], \"answer\": integer (zero-based index of the correct option)}. A string rather than an array because ap-management's magic operator only accepts string inputs.",
+                        "required": true,
+                        "default": ""
+                    }
+                ]
+            }
+        }
+    ],
+    "edges": [
+        {
+            "from": "aa100000-0000-4000-8000-000000000001",
+            "to": "aa100000-0000-4000-8000-000000000002",
+            "labels": [
+                "consist_of"
+            ]
+        }
+    ]
+}

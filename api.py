@@ -218,7 +218,7 @@ async def _seed_if_missing(
 async def seed_aps_to_moma() -> None:
     async with httpx.AsyncClient() as client:
         for _, path, _ in list_ap_files():
-            if path.split("/")[-1][:2] not in ("01", "02", "08"):
+            if path.split("/")[-1][:2] not in ("01", "02", "08", "10"):
                 continue
             data = load_ap_json(path)
             ap_id = next(

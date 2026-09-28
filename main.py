@@ -171,6 +171,10 @@ _PLAN_PRESETS: list[dict] = [
      "task": "Convert \"Find my stuff\" into SQL and then convert the SQL to JSON",
      "magic": True,
      "description": "Same request, but the missing SQL-to-JSON step is filled mid-chain by a magic operator."},
+    {"label": "MathE test recommendation + explain answers (OK Scenario)",
+     "task": "Recommend MathE questions for a good student in linear algebra, then explain the answers to those questions",
+     "magic": True,
+     "description": "The Test Recommendation operator picks MCQs for the student's level and topic; no catalogued AP explains answers, so a magic operator is chained after it to justify each correct answer."},
 ]
 _PLAN_PRESET_LABELS = [_PLAN_PRESET_PLACEHOLDER] + [p["label"] for p in _PLAN_PRESETS]
 _PLAN_PRESET_MAP = {p["label"]: p for p in _PLAN_PRESETS}
